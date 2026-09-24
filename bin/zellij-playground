@@ -10,12 +10,13 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / '.playground/zellij'
-SESSION = 'sumi-zellij'
+SESSION = os.environ.get('SUMI_SESSION', 'sumi-zellij')
 binary = shutil.which('zellij')
 if not binary:
     sys.exit('Install Zellij first: brew install zellij')
 STATE.mkdir(parents=True, exist_ok=True)
 q = lambda value: json.dumps(str(value))
+top_args = '"-s" "2" "-n" "0"' if sys.platform == 'darwin' else '"-b" "-d" "2"'
 layout = STATE / 'layout.kdl'
 layout.write_text(f'''layout {{
     cwd {q(ROOT)}
@@ -27,7 +28,7 @@ layout.write_text(f'''layout {{
         pane split_direction="vertical" {{
             pane size="17%" {{
                 pane name="Tasks" size="65%" command={q(ROOT / 'bin/task-list')}
-                pane name="Agent sessions" size="35%" command={q(ROOT / 'bin/session-list')}
+                pane name="Agent sessions" size="35%" command={q(ROOT / 'bin/session-list')} {{ args "--session" {q(SESSION)}; }}
             }}
             pane name="Agent / shell" size="43%" focus=true
             pane size="40%" {{
@@ -36,7 +37,7 @@ layout.write_text(f'''layout {{
                     pane name="Diff" command={q(ROOT / 'bin/artifact-viewer')} {{ args "diff"; }}
                     pane name="Terminal / nvim" expanded=true
                 }}
-                pane name="CPU" size="18%" command="/usr/bin/top" {{ args "-s" "2" "-n" "0"; }}
+                pane name="CPU" size="18%" command="top" {{ args {top_args}; }}
                 pane name="Weekly allowance remaining" size="22%" command={q(ROOT / 'bin/usage-monitor')}
             }}
         }}

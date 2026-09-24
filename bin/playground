@@ -8,7 +8,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 STATE = ROOT / '.playground'
-SESSION = 'sumi-playground'
+WORKDIR = STATE / 'demo' if (STATE / 'demo').is_dir() else ROOT
+SESSION = os.environ.get('SUMI_SESSION', 'sumi-playground')
 ENV = dict(os.environ, RAD_HOME=str(STATE / 'radicle'), RAD_PASSPHRASE='')
 
 def run(*args, **kwargs):
@@ -27,20 +28,21 @@ def start():
         task_pane()
         print('Playground is already running.')
         return
-    tmux('new-session', '-d', '-s', SESSION, '-n', 'work', '-c', str(STATE / 'demo'))
+    tmux('new-session', '-d', '-s', SESSION, '-n', 'work', '-c', str(WORKDIR))
     configure_keys()
     tmux('set-environment', '-t', SESSION, 'RAD_HOME', str(STATE / 'radicle'))
     tmux('set-environment', '-t', SESSION, 'RAD_PASSPHRASE', '')
     tmux('set-option', '-t', SESSION, 'remain-on-exit', 'on')
     # Respawn the first shell so it inherits the isolated Radicle environment.
-    tmux('respawn-pane', '-k', '-t', SESSION + ':work', '-c', str(STATE / 'demo'))
-    tmux('split-window', '-h', '-t', SESSION + ':work', '-c', str(STATE / 'demo'))
+    tmux('respawn-pane', '-k', '-t', SESSION + ':work', '-c', str(WORKDIR))
+    tmux('split-window', '-h', '-t', SESSION + ':work', '-c', str(WORKDIR))
     task_pane()
-    command = shlex.join(['forgejo', 'web', '--work-path', str(STATE / 'forgejo'),
-                         '--config', str(STATE / 'forgejo/app.ini')])
-    tmux('new-window', '-t', SESSION, '-n', 'forgejo', command)
+    if (STATE / 'forgejo/app.ini').exists():
+        command = shlex.join(['forgejo', 'web', '--work-path', str(STATE / 'forgejo'),
+                             '--config', str(STATE / 'forgejo/app.ini')])
+        tmux('new-window', '-t', SESSION, '-n', 'forgejo', command)
     tmux('select-window', '-t', SESSION + ':work')
-    print('Started. Forgejo: http://127.0.0.1:3180')
+    print('Started Sumi tmux workspace.')
 
 def configure_keys():
     # Preserve modified Enter and other extended keys through the multiplexer.
@@ -84,7 +86,8 @@ elif command == 'rad':
     run('rad', *sys.argv[2:], cwd=STATE / 'demo', env=ENV)
 elif command == 'status':
     print('tmux:', 'running' if exists() else 'stopped')
-    run('rad', 'issue', 'list', cwd=STATE / 'demo', env=ENV)
+    if (STATE / 'radicle').exists():
+        run('rad', 'issue', 'list', cwd=STATE / 'demo', env=ENV)
 elif command == 'tasks':
     if not exists():
         start()

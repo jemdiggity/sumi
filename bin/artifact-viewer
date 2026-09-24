@@ -7,7 +7,8 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-REPO = ROOT / '.playground/demo'
+DEMO = ROOT / '.playground/demo'
+REPO = DEMO if (DEMO / '.git').exists() else ROOT
 SOCKET = 'sumi-artifact-viewer'
 env = dict(os.environ)
 env.pop('TMUX', None)
@@ -18,7 +19,8 @@ def mux(*args, check=True):
 mode = sys.argv[1] if len(sys.argv) > 1 else 'open'
 if mode == 'markdown':
     os.environ['PAGER'] = 'less -R'
-    os.execvp('glow', ['glow', '-p', '-w', '96', str(REPO / 'WORKSPACE.md')])
+    document = DEMO / 'WORKSPACE.md' if (DEMO / 'WORKSPACE.md').exists() else ROOT / 'docs/WORKSPACE.md'
+    os.execvp('glow', ['glow', '-p', '-w', '96', str(document)])
 elif mode in ('terminal', 'edit'):
     os.chdir(ROOT)
     shell = os.environ.get('SHELL', '/bin/zsh')

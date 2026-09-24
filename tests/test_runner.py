@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
 from sumi_runner import Factory, Zellij, atomic_json, task_index
+from mux_adapters import ADAPTERS
 
 CLI = Path(__file__).resolve().parents[1] / 'bin/sumi'
 
@@ -57,6 +58,31 @@ sys.exit(int(os.environ.get('FIXTURE_EXIT','0')))
             worker.communicate(timeout=10)
         self.assertEqual(sorted(p.returncode for p in workers), [0, 1])
         self.assertEqual(len(self.factory.records()), 1)
+
+    def test_run_uses_recorded_mux_and_preserves_legacy_records(self):
+        calls = []
+
+        class OtherMux:
+            def __init__(self, session):
+                self.session = session
+
+            def open(self, run, executable):
+                calls.append((self.session, run['id']))
+                return 'opaque-workspace'
+
+        with patch.dict(ADAPTERS, {'fixture': OtherMux}):
+            prepared = Factory(self.root, session='other-session', mux='fixture').prepare('A')
+            # A later invocation's default must not change a prepared run's backend.
+            result = self.factory.start(prepared['id'])
+            self.assertEqual(result['workspace_mux'], 'fixture')
+            self.assertEqual(result['workspace_id'], 'opaque-workspace')
+            self.assertEqual(calls, [('other-session', prepared['id'])])
+        legacy = self.factory.prepare('B')
+        legacy.pop('workspace_mux')
+        self.factory.save(legacy)
+        with patch.object(Zellij, 'open', return_value='9') as launch:
+            self.factory.start(legacy['id'])
+        launch.assert_called_once()
 
     def test_dependencies_and_graph_errors(self):
         self.tasks[0]['depends_on'] = ['B']

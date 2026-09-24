@@ -2,6 +2,19 @@
 
 A lean software factory assembled from existing tools and composable agent skills.
 
+Clone setup (macOS, Linux, or WSL with Homebrew):
+
+```sh
+./setup.sh --mux zellij --with-codex  # or --mux tmux; no mux is required by the core
+codex login
+bin/zellij-playground
+```
+
+Use `--dry-run` to preview or `--check` to verify dependencies. See
+[setup and adapter coverage](docs/SETUP.md) for optional tools and current limits,
+and [LF-7–10 implementation history](docs/IMPLEMENTATION-HISTORY.md) for what was
+built versus exercised manually.
+
 The draft [feature list](docs/FEATURES.md) records proposed priorities and current
 implementation coverage, informed by [related product research](docs/PRODUCT-RESEARCH.md).
 

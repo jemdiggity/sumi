@@ -1,4 +1,4 @@
-"""Small local runner: Git owns files, Codex owns conversations, Zellij owns views."""
+"""Local task/run control: Git owns files; agent and mux adapters provide execution and views."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -16,6 +16,7 @@ import tempfile
 import time
 import uuid
 from agent_activity import run_activity, pane_activity
+from mux_adapters import Zellij, get_mux  # Zellij alias retained for existing integrations/tests
 
 
 LIVE = {'starting', 'running'}
@@ -93,59 +94,15 @@ def task_index(tasks):
     return index, ancestors, edges
 
 
-class Zellij:
-    def __init__(self, session):
-        self.session = session
-
-    def action(self, *args):
-        return command(['zellij', '--session', self.session, 'action', *args])
-
-    def updates(self, pane_id):
-        """Yield native viewport events, owning the subscriber's lifetime."""
-        process = subprocess.Popen(
-            ['zellij', '--session', self.session, 'subscribe',
-             '--pane-id', pane_id, '--format', 'json'],
-            stdout=subprocess.PIPE, text=True)
-        try:
-            for line in process.stdout:
-                yield json.loads(line)
-            if process.wait():
-                raise RuntimeError('Zellij pane subscription failed; see stderr above')
-        finally:
-            process.stdout.close()
-            if process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
-
-    def open(self, run, executable):
-        q = lambda s: json.dumps(str(s))
-        layout = Path(run['directory']) / 'workspace.kdl'
-        layout.write_text('layout {\n pane split_direction="vertical" {\n'
-                          f'  pane name="{run["task_id"]} / Codex" size="75%" command={q(sys.executable)} {{\n'
-                          f'   args {q(executable)} "--root" {q(run["root"])} "_worker" {q(run["id"])};\n'
-                          '  }\n  pane name="Worktree shell"\n }\n'
-                          ' pane size=1 borderless=true { plugin location="zellij:compact-bar"; }\n}\n')
-        return self.action('new-tab', '--no-focus', '--name', run['id'],
-                           '--cwd', run['worktree'], '--layout', str(layout))
-
-    def tabs(self):
-        return json.loads(self.action('list-tabs', '--json'))
-
-    def focus(self, tab):
-        self.action('go-to-tab-by-id', str(tab))
-
-
 class Factory:
-    def __init__(self, root, session='sumi-zellij'):
+    def __init__(self, root, session='sumi-zellij', mux='zellij'):
         self.root = Path(root).resolve()
         self.state = self.root / '.playground/runs'
         self.state.mkdir(parents=True, exist_ok=True)
         self.tasks = self.root / 'tasks.json'
         self.session = session
+        self.mux = mux
+        get_mux(mux, session)  # reject unavailable backends before reserving tasks
         self.executable = Path(__file__).resolve().parent.parent / 'bin/sumi'
 
     @contextmanager
@@ -225,7 +182,7 @@ class Factory:
                 worktree, branch, base = Path(previous['worktree']), previous['branch'], previous['base']
             run = dict(id=run_id, task_id=task_id, task=task, agent='codex', root=str(self.root),
                        directory=str(directory), worktree=str(worktree), branch=branch, base=base,
-                       state='preparing', created_at=now(), workspace_session=self.session)
+                       state='preparing', created_at=now(), workspace_session=self.session, workspace_mux=self.mux)
             if previous:
                 run.update(previous_run=previous['id'], session_id=previous['session_id'])
             self.save(run)
@@ -260,7 +217,7 @@ class Factory:
             self.save(run)
             self.task_run_state(run)
         try:
-            tab = Zellij(run['workspace_session']).open(run, self.executable)
+            tab = get_mux(run.get('workspace_mux', 'zellij'), run['workspace_session']).open(run, self.executable)
         except Exception as error:
             with self.lock():
                 run = self.read(run_id)
@@ -272,7 +229,7 @@ class Factory:
             raise
         with self.lock():
             run = self.read(run_id)
-            run['tab_id'] = tab
+            run['workspace_id'] = tab
             self.save(run)
         return run
 
@@ -381,6 +338,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, help='Canonical project checkout (auto-detected from Git)')
     parser.add_argument('--session', default='sumi-zellij')
+    parser.add_argument('--mux', default='zellij', help='Workspace backend (currently zellij; other adapters are planned)')
     sub = parser.add_subparsers(dest='action', required=True)
     p = sub.add_parser('prepare', help='Reserve a task and create its worktree')
     p.add_argument('task_id')
@@ -411,7 +369,7 @@ def main():
     args = parser.parse_args()
     try:
         root = args.root or Path(command(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])).parent
-        factory = Factory(root, args.session)
+        factory = Factory(root, args.session, args.mux)
         if args.action in ('activity', 'tail', 'peek'):
             if args.lines < 1 or args.lines > 200:
                 raise ValueError('--lines must be between 1 and 200')
@@ -419,7 +377,7 @@ def main():
                 if args.action == 'peek' and args.follow:
                     # Zellij sends whole changed viewports; cropping is local.
                     from contextlib import closing
-                    with closing(Zellij(args.session).updates(args.pane_id)) as updates:
+                    with closing(get_mux(args.mux, args.session).updates(args.pane_id)) as updates:
                         for event in updates:
                             if event.get('event') == 'pane_closed':
                                 result = dict(pane_id=args.pane_id, activity='unknown',
@@ -437,7 +395,7 @@ def main():
                     return
                 while True:
                     if args.action == 'peek':
-                        text = Zellij(args.session).action('dump-screen', '--pane-id', args.pane_id)
+                        text = get_mux(args.mux, args.session).capture(args.pane_id)
                         result = pane_activity(text, args.lines, args.busy_regex, args.waiting_regex)
                         result['pane_id'] = args.pane_id
                     else:
@@ -476,7 +434,7 @@ def main():
         elif args.action in ('inspect', 'focus'):
             result = factory.reconcile(args.run_id)
             try:
-                tabs = Zellij(result['workspace_session']).tabs()
+                tabs = get_mux(result.get('workspace_mux', 'zellij'), result['workspace_session']).workspaces()
             except (RuntimeError, OSError) as error:
                 tabs = []
                 result['workspace_error'] = str(error)
@@ -485,7 +443,7 @@ def main():
             if args.action == 'focus':
                 if not matching:
                     raise ValueError('Workspace missing; files and run record remain. Use resume to prepare another attempt.')
-                Zellij(result['workspace_session']).focus(matching[0]['tab_id'])
+                get_mux(result.get('workspace_mux', 'zellij'), result['workspace_session']).focus(matching[0]['id'])
             else:
                 result['git_status'] = (command(['git', 'status', '--short'], result['worktree'])
                                         if Path(result['worktree']).exists() else 'Worktree missing')

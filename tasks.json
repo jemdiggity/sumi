@@ -393,5 +393,21 @@
       "docs/PRODUCT-RESEARCH.md: first-party comparison of HumanLayer, RunPane, Superset, Conductor, Cursor, native cmux and Vibe Kanban, checked 2026-09-24; documented claims distinguished from hands-on validation.",
       "docs/FEATURES.md revision 1: 28 stable feature IDs, current coverage, proposed priorities, three candidate slices, representative review story and open product choices. Draft only; no implementation approval inferred."
     ]
+  },
+  {
+    "id": "LF-23",
+    "title": "Portable setup and explicit mux boundary",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "Install or check selected dependencies without assuming this machine's ignored runtime state.",
+      "Separate runner lifecycle from mux-specific view operations and document current adapter limits.",
+      "Explain LF-7 through LF-10 with implementation and experiment evidence."
+    ],
+    "evidence": [
+      "setup.sh installs/checks selected Homebrew dependencies; 14 tests pass including missing-tool install, repeat-run idempotence, read-only checks, backend routing and legacy run compatibility.",
+      "Fresh temporary checkouts without ignored state successfully launched tmux and Zellij workspaces, including paths with spaces. No real missing packages were installed during tests.",
+      "lib/mux_adapters.py separates Zellij view operations; run records name backend and opaque workspace ID. Managed mux parity remains future work. docs/SETUP.md and docs/IMPLEMENTATION-HISTORY.md document scope and LF-7\u201310 evidence."
+    ]
   }
 ]
