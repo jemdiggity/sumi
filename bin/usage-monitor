@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+"""Refresh CodexBar's compact Claude/Codex quota display in a terminal pane."""
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+binary = shutil.which('codexbar') or str(ROOT / '.playground/codexbar/bin/codexbar')
+try:
+    print('Fetching Claude / Codex usage…', flush=True)
+    while True:
+        env = dict(os.environ, COLUMNS='80', LINES='24', NO_COLOR='1')
+        # Provider probes create their own PTYs, outside this workspace's control.
+        for key in ('ZELLIJ', 'ZELLIJ_SESSION_NAME', 'ZELLIJ_PANE_ID', 'TMUX', 'TMUX_PANE'):
+            env.pop(key, None)
+        env['TERM'] = 'xterm-256color'
+        try:
+            result = subprocess.run(
+                [binary, 'cards', '--provider', 'both', '--brief', '--source', 'cli'],
+                stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                timeout=45, env=env, start_new_session=True)
+            output = result.stdout + result.stderr
+        except (OSError, subprocess.TimeoutExpired) as error:
+            output = f'Usage unavailable: {error}\n'
+        print('\033[H\033[2J' + output.rstrip() + '\nRefresh: 60s · Ctrl+C exits', flush=True)
+        time.sleep(60)
+except KeyboardInterrupt:
+    pass

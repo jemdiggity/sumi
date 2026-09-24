@@ -252,5 +252,22 @@
     ],
     "evidence": [],
     "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control."
+  },
+  {
+    "id": "LF-16",
+    "title": "Add Claude and Codex usage pane",
+    "status": "done",
+    "depends_on": [
+      "LF-13"
+    ],
+    "acceptance": [
+      "A refreshing usage pane sits below CPU in Zellij and is included in the reusable layout."
+    ],
+    "evidence": [
+      "CodexBar CLI 0.65.0 downloaded from official GitHub release; SHA-256 matched release asset digest.",
+      "bin/usage-monitor refreshes both providers through CLI logins every 60 seconds, using a separate subprocess session and disconnected stdin.",
+      "Live Zellij terminal_11 verified directly below CPU; screen capture showed Codex 36% and Claude 8% usage with reset timers.",
+      "bin/zellij-playground includes usage monitor in new workspace layouts."
+    ]
   }
 ]

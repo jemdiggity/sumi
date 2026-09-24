@@ -24,12 +24,13 @@ layout.write_text(f'''layout {{
             pane name="Tasks" size="17%" command={q(ROOT / 'bin/task-list')}
             pane name="Agent / shell" size="43%" focus=true
             pane size="40%" {{
-                pane stacked=true size="78%" {{
+                pane stacked=true size="60%" {{
                     pane name="Markdown" command={q(ROOT / 'bin/artifact-viewer')} {{ args "markdown"; }}
                     pane name="Diff" command={q(ROOT / 'bin/artifact-viewer')} {{ args "diff"; }}
                     pane name="Terminal / nvim" expanded=true
                 }}
-                pane name="CPU" command="/usr/bin/top" {{ args "-s" "2" "-n" "0"; }}
+                pane name="CPU" size="18%" command="/usr/bin/top" {{ args "-s" "2" "-n" "0"; }}
+                pane name="Claude / Codex usage" size="22%" command={q(ROOT / 'bin/usage-monitor')}
             }}
         }}
         pane size=1 borderless=true {{ plugin location="zellij:compact-bar"; }}
