@@ -409,5 +409,17 @@
       "Fresh temporary checkouts without ignored state successfully launched tmux and Zellij workspaces, including paths with spaces. No real missing packages were installed during tests.",
       "lib/mux_adapters.py separates Zellij view operations; run records name backend and opaque workspace ID. Managed mux parity remains future work. docs/SETUP.md and docs/IMPLEMENTATION-HISTORY.md document scope and LF-7\u201310 evidence."
     ]
+  },
+  {
+    "id": "LF-24",
+    "title": "Pin worker models and account for token usage",
+    "status": "active",
+    "depends_on": [],
+    "acceptance": [
+      "Astra creates a bounded brief; Sol implements it in an isolated worktree.",
+      "Record explicit model/effort and report run token deltas without double-counting resumed sessions.",
+      "Coordinator reviews implementation and validates against independent cases."
+    ],
+    "evidence": []
   }
 ]
