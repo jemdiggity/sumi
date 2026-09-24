@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 import uuid
+from agent_activity import run_activity, pane_activity
 
 
 LIVE = {'starting', 'running'}
@@ -367,6 +368,18 @@ def main():
         p = sub.add_parser(name)
         p.add_argument('run_id')
     sub.add_parser('runs', help='Reconcile and list recorded runs as JSON')
+    for name in ('activity', 'tail'):
+        p = sub.add_parser(name, help='Read managed agent activity and recent output')
+        p.add_argument('run_id')
+        p.add_argument('--lines', type=int, default=10)
+        p.add_argument('--follow', action='store_true')
+    p = sub.add_parser('peek', help='Capture any Zellij terminal; optional regex gives only a heuristic')
+    p.add_argument('pane_id')
+    p.add_argument('--lines', type=int, default=10)
+    p.add_argument('--busy-regex', default='esc to interrupt',
+                   help='Busy indicator (default: Codex esc-to-interrupt marker)')
+    p.add_argument('--waiting-regex')
+    p.add_argument('--follow', action='store_true')
     p = sub.add_parser('resume', help='Prepare a new attempt in the same worktree and Codex conversation')
     p.add_argument('run_id')
     p.add_argument('--prompt', required=True)
@@ -378,7 +391,29 @@ def main():
     try:
         root = args.root or Path(command(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])).parent
         factory = Factory(root, args.session)
-        if args.action == 'prepare':
+        if args.action in ('activity', 'tail', 'peek'):
+            if args.lines < 1 or args.lines > 200:
+                raise ValueError('--lines must be between 1 and 200')
+            try:
+                while True:
+                    if args.action == 'peek':
+                        text = Zellij(args.session).action('dump-screen', '--pane-id', args.pane_id)
+                        result = pane_activity(text, args.lines, args.busy_regex, args.waiting_regex)
+                        result['pane_id'] = args.pane_id
+                    else:
+                        result = run_activity(factory.reconcile(args.run_id), args.lines)
+                    if args.follow and sys.stdout.isatty():
+                        print('\033[H\033[2J', end='')
+                    if args.action == 'tail':
+                        print(f'{result["run_id"]}: {result["activity"]}\n' + '\n'.join(result['lines']), flush=True)
+                    else:
+                        print(json.dumps(result, indent=2), flush=True)
+                    if not args.follow:
+                        return
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                return
+        elif args.action == 'prepare':
             result = factory.prepare(args.task_id)
         elif args.action == 'start':
             result = factory.start(args.run_id)
@@ -396,6 +431,8 @@ def main():
             result = factory.prepare(previous['task_id'], previous, args.prompt)
         elif args.action == 'runs':
             result = [factory.reconcile(r['id']) for r in factory.records()]
+            for run in result:
+                run['activity'] = run_activity(run, 1)['activity']
         elif args.action in ('inspect', 'focus'):
             result = factory.reconcile(args.run_id)
             try:

@@ -19,6 +19,10 @@ q = lambda value: json.dumps(str(value))
 layout = STATE / 'layout.kdl'
 layout.write_text(f'''layout {{
     cwd {q(ROOT)}
+    new_tab_template {{
+        pane
+        pane size=1 borderless=true {{ plugin location="zellij:compact-bar"; }}
+    }}
     tab name="Sumi" {{
         pane split_direction="vertical" {{
             pane name="Tasks" size="17%" command={q(ROOT / 'bin/task-list')}

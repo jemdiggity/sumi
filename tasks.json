@@ -313,5 +313,20 @@
     ],
     "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment.",
     "last_run": "LF-18-318f0712"
+  },
+  {
+    "id": "LF-19",
+    "title": "Keep tab navigation visible and expose agent activity",
+    "status": "done",
+    "depends_on": [
+      "LF-15"
+    ],
+    "acceptance": [
+      "Existing and newly created Zellij task tabs retain the bottom navigation bar without restarting terminal processes.",
+      "Expose a ten-line agent output tail and evidence-based activity state; do not infer idle merely from silence."
+    ],
+    "evidence": [
+      "Added compact bottom bars to all six existing tabs; verified original terminal IDs preserved and one UI row reserved on every tab. Future workspace and shell-tab layouts include the bar. Added ten-line managed output tails/activity plus live pane capture with configurable regex, defaulting to Codex esc-to-interrupt. Ten tests passed, including event lifecycle and ambiguous/no-match screen detection."
+    ]
   }
 ]

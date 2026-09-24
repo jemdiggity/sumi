@@ -55,6 +55,25 @@ stay separate until explicitly integrated. While workers run, use `bin/sumi`
 for task outcomes; direct JSON edits do not participate in the writer lock.
 See [the run contract](docs/PARALLEL-RUNS.md) for failure and recovery behavior.
 
+Inspect recent output without switching focus:
+
+```sh
+bin/sumi tail RUN-ID --lines 10 --follow
+bin/sumi activity RUN-ID
+bin/sumi peek terminal_2 --lines 10 --follow
+```
+
+`tail` and `activity` use the managed Codex event log and run state. A turn start
+means busy, a turn completion means idle, and a recorded process exit means
+finished (not necessarily an accepted task). Quiet output alone never means idle.
+`peek` works on any existing Zellij terminal: it polls the rendered viewport each
+second, trims trailing blank padding, and shows the last ten lines. The default
+busy regex is `esc to interrupt`, matching Codex's working indicator. Override
+`--busy-regex` or `--waiting-regex` for other terminal tools, including Claude.
+These screen matches are labelled heuristics: scrolled output, hidden indicators,
+or quoted text can mislead them. Without a match the result is unknown.
+They do not automatically schedule work or change task status.
+
 ## Zellij comparison
 
 Zellij 0.45.1 is installed through Homebrew. In a new Ghostty tab, run:
