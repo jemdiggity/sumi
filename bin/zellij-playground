@@ -30,7 +30,7 @@ layout.write_text(f'''layout {{
                     pane name="Terminal / nvim" expanded=true
                 }}
                 pane name="CPU" size="18%" command="/usr/bin/top" {{ args "-s" "2" "-n" "0"; }}
-                pane name="Claude / Codex usage" size="22%" command={q(ROOT / 'bin/usage-monitor')}
+                pane name="Weekly allowance remaining" size="22%" command={q(ROOT / 'bin/usage-monitor')}
             }}
         }}
         pane size=1 borderless=true {{ plugin location="zellij:compact-bar"; }}

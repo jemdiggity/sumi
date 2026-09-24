@@ -61,12 +61,15 @@ Zellij's native [layouts](https://zellij.dev/documentation/creating-a-layout)
 and [control CLI](https://zellij.dev/documentation/programmatic-control.html)
 are the adapter surface for this experiment.
 
-`bin/usage-monitor` refreshes CodexBar's compact quota table every 60 seconds,
+`bin/usage-monitor` refreshes a weekly allowance remaining table every 60 seconds,
 using existing provider CLI logins (`--source cli`). It reports fetch failures
 instead of treating missing usage as zero. CodexBar CLI 0.65.0 is installed
 locally under `.playground/codexbar/bin/`; the release archive was checked against
 the GitHub release's SHA-256 digest. The monitor also accepts `codexbar` on PATH.
-It shows subscription quota usage/reset times, not API billing totals.
+It reads CodexBar's JSON weekly window for each provider and displays
+`100 - usedPercent` plus the weekly reset in local time. Missing weekly data
+is marked unavailable; session usage is never substituted. It shows subscription
+quota remaining, not API billing totals.
 
 ## cmux comparison
 

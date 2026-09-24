@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Refresh CodexBar's compact Claude/Codex quota display in a terminal pane."""
 import os
+import json
+from datetime import datetime
 from pathlib import Path
 import shutil
 import subprocess
@@ -8,6 +10,27 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 binary = shutil.which('codexbar') or str(ROOT / '.playground/codexbar/bin/codexbar')
+
+def weekly_table(payload):
+    rows = ['WEEKLY ALLOWANCE REMAINING', '',
+            f'{"Provider":<10} {"Remaining":>10}   Weekly reset (local)',
+            '─' * 62]
+    providers = {item['provider']: item for item in payload}
+    for provider in ('claude', 'codex'):
+        item = providers.get(provider, {})
+        window = (item.get('usage') or {}).get('secondary') or {}
+        used = window.get('usedPercent')
+        if window.get('windowMinutes') != 10080 or not isinstance(used, (int, float)):
+            rows.append(f'{provider.title():<10} unavailable   Weekly data not returned')
+            continue
+        remaining = max(0, min(100, 100 - used))
+        reset = window.get('resetDescription') or 'Unknown'
+        if window.get('resetsAt'):
+            reset = datetime.fromisoformat(window['resetsAt'].replace('Z', '+00:00')).astimezone().strftime('%a %b %d, %I:%M %p')
+        rows.append(f'{provider.title():<10} {remaining:>9g}%   {reset}')
+    rows.extend(['', 'Updated: ' + datetime.now().strftime('%H:%M:%S')])
+    return '\n'.join(rows)
+
 try:
     print('Fetching Claude / Codex usage…', flush=True)
     while True:
@@ -18,11 +41,13 @@ try:
         env['TERM'] = 'xterm-256color'
         try:
             result = subprocess.run(
-                [binary, 'cards', '--provider', 'both', '--brief', '--source', 'cli'],
+                [binary, 'usage', '--provider', 'both', '--format', 'json', '--source', 'cli'],
                 stdin=subprocess.DEVNULL, capture_output=True, text=True,
                 timeout=45, env=env, start_new_session=True)
-            output = result.stdout + result.stderr
-        except (OSError, subprocess.TimeoutExpired) as error:
+            output = weekly_table(json.loads(result.stdout))
+            if result.returncode:
+                output += '\nProvider fetch incomplete; unavailable values are not zero.'
+        except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as error:
             output = f'Usage unavailable: {error}\n'
         print('\033[H\033[2J' + output.rstrip() + '\nRefresh: 60s · Ctrl+C exits', flush=True)
         time.sleep(60)
