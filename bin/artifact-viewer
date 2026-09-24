@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Tabbed Markdown, diff, and editor workspace for one outer tmux pane."""
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parent.parent
+REPO = ROOT / '.playground/demo'
+SOCKET = 'sumi-artifact-viewer'
+env = dict(os.environ)
+env.pop('TMUX', None)
+
+def mux(*args, check=True):
+    return subprocess.run(['tmux', '-L', SOCKET, *args], env=env, check=check)
+
+mode = sys.argv[1] if len(sys.argv) > 1 else 'open'
+if mode == 'markdown':
+    os.environ['PAGER'] = 'less -R'
+    os.execvp('glow', ['glow', '-p', '-w', '96', str(REPO / 'WORKSPACE.md')])
+elif mode == 'edit':
+    os.chdir(REPO)
+    os.execvp('nvim', ['nvim', str(REPO / 'WORKSPACE.md')])
+elif mode == 'diff':
+    def git(*args):
+        result = subprocess.run(['git', '-C', str(REPO), *args], capture_output=True)
+        if result.returncode not in (0, 1):
+            sys.exit(result.stderr.decode(errors='replace'))
+        return result.stdout
+    diff = git('diff', '--no-ext-diff', '--no-color', 'HEAD', '--')
+    for path in git('ls-files', '--others', '--exclude-standard', '-z').split(b'\0'):
+        if path:
+            diff += git('diff', '--no-ext-diff', '--no-color', '--no-index',
+                        '--', '/dev/null', os.fsdecode(path))
+    subprocess.run(['delta', '--paging=always', '--pager=less -R', '--line-numbers'],
+                   input=diff or b'No changes relative to HEAD.\n', check=True)
+else:
+    present = mux('has-session', '-t', 'artifacts', check=False).returncode == 0
+    if not present:
+        command = lambda view: shlex.join([str(Path(__file__).resolve()), view])
+        mux('-f', '/dev/null', 'new-session', '-d', '-s', 'artifacts', '-n', 'Markdown', command('markdown'))
+        mux('set-option', '-g', 'prefix', 'None')
+        mux('set-option', '-g', 'prefix2', 'None')
+        mux('set-option', '-g', 'mouse', 'on')
+        mux('set-option', '-g', 'status-position', 'top')
+        mux('set-option', '-g', 'status-left', '')
+        mux('set-option', '-g', 'status-right', ' F1 Markdown | F2 Diff | F3 Neovim | F5 Refresh view ')
+        mux('set-option', '-g', 'status-right-length', '60')
+        mux('set-option', '-g', 'window-status-current-style', 'bg=blue,fg=white,bold')
+        mux('set-option', '-g', 'remain-on-exit', 'on')
+        mux('new-window', '-t', 'artifacts', '-n', 'Diff', command('diff'))
+        mux('new-window', '-t', 'artifacts', '-n', 'Neovim', command('edit'))
+        mux('bind-key', '-n', 'F1', 'select-window', '-t', 'artifacts:0')
+        mux('bind-key', '-n', 'F2', 'select-window', '-t', 'artifacts:1')
+        mux('bind-key', '-n', 'F3', 'select-window', '-t', 'artifacts:2')
+        mux('bind-key', '-n', 'F5', 'if-shell', '-F', '#{==:#{window_index},2}',
+            'send-keys F5', 'respawn-pane -k')
+    mux('select-window', '-t', 'artifacts:1')
+    os.execvpe('tmux', ['tmux', '-L', SOCKET, 'attach-session', '-t', 'artifacts'], env)
