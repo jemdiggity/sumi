@@ -1,4 +1,4 @@
-# Astra design / Sol implementation experiment
+# Astra design / Astra, Sol, and Luna implementation experiment
 
 Draft protocol · 2026-09-24. No comparative model runs have been executed yet.
 The hypothesis is lower cost per accepted feature without worse correctness or
@@ -12,10 +12,10 @@ acceptance checks, and unresolved questions. Include enough rationale to let the
 implementer make routine choices without repeating discovery. Avoid prescribing
 every line of code. Resolve consequential product questions before handing off.
 
-Sol receives the brief, its revision, the base commit, and an isolated worktree.
+The implementation agent receives the brief, its revision, the base commit, and an isolated worktree.
 It implements and verifies the slice, reporting changes, checks, deviations,
 and blockers. A material contradiction returns to design; routine implementation
-choices stay with Sol. An independent review evaluates the actual result.
+choices stay with the implementation agent. An independent review evaluates the actual result.
 
 Use explicit model and reasoning-effort settings, rather than the user's CLI
 defaults. The current Sumi runner does not yet expose these fields; model
@@ -25,15 +25,16 @@ The installed native CLI supports `codex exec --model ... --json`.
 ## Comparison
 
 Freeze the request, base commit, acceptance rubric and evaluator checks before
-running either workflow. Give both arms the same tools, permissions, dependency
+running the workflows. Give all arms the same tools, permissions, dependency
 state, time limit and repair allowance. Isolate worktrees and conversations so
-neither sees the other's implementation or review feedback.
+no implementation sees another arm's code or review feedback.
 
 | Arm | Workflow | What it tests |
 | --- | --- | --- |
-| A | Astra designs, then continues implementation | End-to-end Astra baseline |
+| A | Astra designs, then continues implementation in the same conversation | End-to-end Astra baseline |
 | B | Astra designs, then hands its artifact to a fresh Sol session | Proposed workflow including handoff overhead |
-| C, optional | Same Astra artifact, fresh Astra implementation session | Separates model choice from context-reset effects |
+| C | Same Astra artifact, fresh Astra implementation session | Separates model choice from context-reset effects |
+| D | Same Astra artifact, fresh Luna implementation session | Lower-cost implementation candidate |
 
 For the first paired pilot, freeze one Astra design artifact and branch at the
 handoff. Charge its design usage to each workflow's hypothetical total, while
@@ -42,7 +43,7 @@ can independently generate designs to test whole-workflow variability. Do not
 charge a shared design only to the baseline, or hide the split workflow's review
 and repair costs.
 
-Initially disable delegated subagents in both arms and instruct them not to
+Initially disable delegated subagents in all arms and instruct them not to
 launch additional agents through shell commands. Audit the observed execution
 trace; a delegation violation invalidates the strict single-model comparison.
 An unrestricted Astra-orchestrator workflow is a different baseline that can
@@ -51,7 +52,33 @@ be tested separately.
 Evaluate correctness with prewritten checks plus a model-blind review of the
 diff. Include regression behavior, maintainability, unnecessary changes, and
 human intervention time. The implementer's own passing tests are evidence,
-not the sole grading standard. Apply the same review and repair policy to both.
+not the sole grading standard. Apply the same review and repair policy to all arms.
+
+## Execution mode
+
+Use the same noninteractive Codex CLI harness for every measured arm, with
+explicit model and effort settings. JSON mode changes the output transport;
+it does not turn the agent into a different chat interface or remove its tools.
+The worker reads its prompt from stdin, executes in its worktree, emits JSONL
+progress, and exits when its turn completes. A follow-up resumes the exact
+recorded conversation ID in another CLI invocation.
+
+Sumi's current command (before adding model pinning) is:
+
+```sh
+codex -a never exec -s workspace-write --json - < prompt.md
+```
+
+The supervisor saves raw events, stderr and the final result, and renders
+selected messages and commands in a mux pane. The pane is a live monitor of
+noninteractive execution, not an interactive Codex prompt. It cannot answer an
+interactive approval request: actions needing new permission fail under this
+policy. An adjacent shell remains available for manual interactive Codex use.
+
+Arm A resumes its design conversation; arms B/C/D start fresh conversations
+from the frozen handoff. A fresh process is not necessarily a fresh conversation.
+Keep sandbox, tools and approval policy consistent across arms. Record human
+follow-ups and repairs as part of the measured workflow.
 
 ## Measurements and decision
 
@@ -87,7 +114,7 @@ thresholds with the user before judging results; do not select them afterward.
 Our local run logs contain `turn.completed.usage`. The provider session logs
 identify both original worker conversations as `gpt-6-luna`, effort `low`.
 The user CLI configuration currently has the same defaults. These runs therefore
-provide a telemetry example, not an Astra-versus-Sol experiment.
+provide a telemetry example, not an Astra/Sol/Luna experiment.
 
 | Conversation | Cumulative input | Cached subset | Output |
 | --- | ---: | ---: | ---: |
