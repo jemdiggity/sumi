@@ -99,6 +99,9 @@ native Codex/Claude terminals in this Zellij session and uses native viewport
 subscriptions for screen-based busy hints (`~`). Managed workers use their
 event logs; finished conversations appear under Recent, with resumed attempts
 grouped by conversation. A missing screen indicator is unknown, not idle.
+The visible Codex `Worked for …` completion line is an idle hint; a visible
+`Working … esc to interrupt` indicator takes precedence. The sidebar examines
+the current viewport, so completion markers scrolled out of view yield unknown.
 Use `j/k` to scroll, or `bin/session-list --once` for a JSON snapshot.
 Registered headless processes also appear, labelled `(headless)`. Bootstrap
 registrations live in `.playground/external-runs/<id>/run.json`, with `id`,

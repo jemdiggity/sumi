@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import re
 
+CODEX_IDLE_REGEX = r'(?m)^\s*Worked for (?:\d+(?:\.\d+)?[hms]\s*)+(?:[·•]\s*\d{1,2}:\d{2}(?::\d{2})?)?\s*$'
+
 
 def event_tail(path, limit=256 * 1024):
     if not path.exists():
@@ -59,11 +61,14 @@ def run_activity(run, lines=10):
                 run_state=state, lines=list(output))
 
 
-def pane_activity(text, lines=10, busy_regex=None, waiting_regex=None):
+def pane_activity(text, lines=10, busy_regex=None, waiting_regex=None, idle_regex=None):
     tail = text.rstrip().splitlines()[-lines:]
     sample = '\n'.join(tail)
     busy = bool(busy_regex and re.search(busy_regex, sample, re.I))
     waiting = bool(waiting_regex and re.search(waiting_regex, sample, re.I))
     activity = 'unknown' if busy == waiting else ('busy' if busy else 'waiting')
+    # A prior completion can remain visible while a new turn is running.
+    if not busy and not waiting and idle_regex and re.search(idle_regex, sample, re.I):
+        activity = 'idle'
     return dict(activity=activity, source='screen-regex-heuristic', lines=tail,
                 note='A screen match is a hint, not a reliable lifecycle event. Silence is unknown.')

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
-from agent_activity import run_activity, pane_activity
+from agent_activity import CODEX_IDLE_REGEX, run_activity, pane_activity
 
 
 class ActivityTest(unittest.TestCase):
@@ -38,6 +38,23 @@ class ActivityTest(unittest.TestCase):
         self.assertEqual(pane_activity('Working (esc to interrupt)', busy_regex='esc to interrupt')['activity'], 'busy')
         self.assertEqual(pane_activity('Approve? [y/n]', waiting_regex=r'Approve\?')['activity'], 'waiting')
         self.assertEqual(pane_activity('Working Approve?', busy_regex='Working', waiting_regex='Approve')['activity'], 'unknown')
+
+    def test_codex_completion_is_idle_unless_busy_or_waiting(self):
+        def activity(text, **kwargs):
+            return pane_activity(text, idle_regex=CODEX_IDLE_REGEX,
+                                 busy_regex='esc to interrupt', waiting_regex=r'Approve\?',
+                                 **kwargs)['activity']
+        for marker in ('Worked for 16m 21s · 09:19', '  Worked for 2s',
+                       'Worked for 1h 2m 3s · 09:19:00'):
+            self.assertEqual(activity(marker + '\n› Ask Codex to do anything'), 'idle')
+        marker = 'Worked for 16m 21s · 09:19'
+        self.assertEqual(activity(marker + '\n• Working (2s • esc to interrupt)'), 'busy')
+        self.assertEqual(activity(marker + '\nApprove?'), 'waiting')
+        self.assertEqual(activity('User quoted "' + marker + '"'), 'unknown')
+        self.assertEqual(activity('Worked for something'), 'unknown')
+        long_response = marker + '\n' + '\n'.join(['response line'] * 15)
+        self.assertEqual(activity(long_response, lines=20), 'idle')
+        self.assertEqual(activity(long_response), 'unknown')
 
 
 if __name__ == '__main__':
