@@ -78,6 +78,13 @@ These screen matches are labelled heuristics: scrolled output, hidden indicators
 or quoted text can mislead them. Without a match the result is unknown.
 They do not automatically schedule work or change task status.
 
+The **Agent sessions** pane below Tasks runs `bin/session-list`. It discovers
+native Codex/Claude terminals in this Zellij session and uses native viewport
+subscriptions for screen-based busy hints (`~`). Managed workers use their
+event logs; finished conversations appear under Recent, with resumed attempts
+grouped by conversation. A missing screen indicator is unknown, not idle.
+Use `j/k` to scroll, or `bin/session-list --once` for a JSON snapshot.
+
 ## Zellij comparison
 
 Zellij 0.45.1 is installed through Homebrew. In a new Ghostty tab, run:

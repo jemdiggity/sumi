@@ -25,7 +25,10 @@ layout.write_text(f'''layout {{
     }}
     tab name="Sumi" {{
         pane split_direction="vertical" {{
-            pane name="Tasks" size="17%" command={q(ROOT / 'bin/task-list')}
+            pane size="17%" {{
+                pane name="Tasks" size="65%" command={q(ROOT / 'bin/task-list')}
+                pane name="Agent sessions" size="35%" command={q(ROOT / 'bin/session-list')}
+            }}
             pane name="Agent / shell" size="43%" focus=true
             pane size="40%" {{
                 pane stacked=true size="60%" {{

@@ -361,5 +361,21 @@
     "evidence": [
       "Added compact bottom bars to all six existing tabs; verified original terminal IDs preserved and one UI row reserved on every tab. Future workspace and shell-tab layouts include the bar. Added ten-line managed output tails/activity plus live pane capture with configurable regex, defaulting to Codex esc-to-interrupt. Ten tests passed, including event lifecycle and ambiguous/no-match screen detection."
     ]
+  },
+  {
+    "id": "LF-21",
+    "title": "Show live agent sessions below tasks",
+    "status": "done",
+    "depends_on": [
+      "LF-20"
+    ],
+    "acceptance": [
+      "A refreshing sessions pane sits below the task list in live and reusable Zellij layouts.",
+      "Display managed run activity and discovered native agent sessions; distinguish unknown from idle."
+    ],
+    "evidence": [
+      "bin/session-list: native viewport subscriptions for discovered interactive agents, run-event status for managed workers, recent conversations deduplicated by session ID. Unknown never means idle.",
+      "Verified live terminal_26 directly below Tasks; existing terminal IDs preserved and focus restored to terminal_2. Capture shows coordinator BUSY and two FINISHED worker conversations. Reusable launcher includes the sidebar split."
+    ]
   }
 ]

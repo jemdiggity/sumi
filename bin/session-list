@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""Live agent sidebar: durable run events and native Zellij viewport streams."""
+import argparse
+import curses
+import json
+from pathlib import Path
+import shlex
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / 'lib'))
+from agent_activity import pane_activity, run_activity
+from sumi_runner import leased
+
+
+class Watch:
+    def __init__(self, session, pane):
+        self.activity = 'unknown'
+        self.process = subprocess.Popen(
+            ['zellij', '--session', session, 'subscribe', '--pane-id',
+             f'terminal_{pane}', '--format', 'json'],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        self.thread = threading.Thread(target=self.read, daemon=True)
+        self.thread.start()
+
+    def read(self):
+        try:
+            for line in self.process.stdout:
+                event = json.loads(line)
+                if event.get('event') == 'pane_update':
+                    self.activity = pane_activity('\n'.join(event['viewport']),
+                                                  busy_regex='esc to interrupt')['activity']
+                elif event.get('event') == 'pane_closed':
+                    break
+        except (OSError, ValueError, KeyError):
+            pass
+        finally:
+            self.activity = 'unknown'
+
+    def close(self):
+        if self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait()
+        self.thread.join(timeout=2)
+        self.process.stdout.close()
+
+
+def provider(command):
+    try:
+        words = shlex.split(command or '')
+    except ValueError:
+        return None
+    # Inspect executable positions only, never words inside an agent prompt.
+    if not words:
+        return None
+    name = Path(words[0]).name
+    if name in ('node', 'bun') and len(words) > 1:
+        name = Path(words[1]).name
+    return name if name in ('codex', 'claude') else None
+
+
+class Sessions:
+    def __init__(self, session):
+        self.session, self.watches = session, {}
+
+    def rows(self):
+        raw = subprocess.check_output(
+            ['zellij', '--session', self.session, 'action', 'list-panes', '--json'],
+            text=True, stderr=subprocess.DEVNULL, timeout=3)
+        panes = json.loads(raw)
+        runs = []
+        for path in (ROOT / '.playground/runs').glob('*/run.json'):
+            try:
+                run = json.loads(path.read_text())
+                if run.get('workspace_session') == self.session:
+                    runs.append(run)
+            except (OSError, ValueError):
+                continue
+        managed_tabs = {r['id'] for r in runs}
+        native = [p for p in panes if not p['is_plugin'] and not p['exited']
+                  and p.get('tab_name') not in managed_tabs
+                  and provider(p.get('pane_command'))]
+        wanted = {p['id'] for p in native}
+        for key in set(self.watches) - wanted:
+            self.watches.pop(key).close()
+        for key in wanted:
+            if key not in self.watches or self.watches[key].process.poll() is not None:
+                if key in self.watches:
+                    self.watches.pop(key).close()
+                self.watches[key] = Watch(self.session, key)
+        active = [(f'{p["tab_name"]} / {provider(p.get("pane_command"))}',
+                   self.watches[p['id']].activity + ' ~', f'pane {p["id"]}') for p in native]
+        # A resumed conversation has several attempts; show its newest one.
+        latest = {}
+        for run in sorted(runs, key=lambda r: r.get('created_at', '')):
+            latest[run.get('session_id') or run['id']] = run
+        recent = []
+        for run in latest.values():
+            activity = run_activity(run, 1)['activity']
+            if run['state'] == 'running' and not leased(Path(run['directory']) / 'worker.lock'):
+                activity = 'unknown'  # stale run file is not proof of a live worker
+            row = (f'{run["task_id"]} / {run["agent"]}',
+                   activity, run['id'])
+            if run['state'] in ('running', 'starting', 'orphaned'):
+                active.append(row)
+            else:
+                recent.append(row)
+        return active, recent[-3:]
+
+    def close(self):
+        for watch in self.watches.values():
+            watch.close()
+
+
+def display(screen, sessions):
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
+    screen.timeout(1000)
+    offset = 0
+    while True:
+        try:
+            active, recent = sessions.rows()
+            lines = [f'AGENT SESSIONS ({len(active)} active)', '']
+            for label, state, identity in active:
+                lines += [f'{state.upper():12} {label}', f'  {identity}']
+            if not active:
+                lines += ['No active agents.']
+            if recent:
+                lines += ['', 'RECENT']
+                for label, state, identity in recent:
+                    lines += [f'{state.upper():12} {label}', f'  {identity}']
+            lines += ['', '~ screen hint; no match = unknown', 'j/k scroll · q close']
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            lines = ['AGENT SESSIONS', 'Status unavailable', str(error)]
+        height, width = screen.getmaxyx()
+        offset = min(offset, max(0, len(lines) - max(1, height - 1)))
+        screen.erase()
+        for row, line in enumerate(lines[offset:offset + max(0, height - 1)]):
+            try:
+                screen.addnstr(row, 1, ''.join(c for c in line if c.isprintable()),
+                               max(0, width - 2), curses.A_BOLD if row == 0 else 0)
+            except curses.error:
+                pass
+        screen.refresh()
+        key = screen.getch()
+        if key in (ord('q'), 27):
+            return
+        if key in (ord('j'), curses.KEY_DOWN):
+            offset += 1
+        elif key in (ord('k'), curses.KEY_UP):
+            offset = max(0, offset - 1)
+
+
+if __name__ == '__main__':
+    def stop(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGHUP, stop)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--session', default='sumi-zellij')
+    parser.add_argument('--once', action='store_true', help='Print a JSON snapshot')
+    args = parser.parse_args()
+    sessions = Sessions(args.session)
+    try:
+        if args.once:
+            sessions.rows()
+            time.sleep(0.2)  # allow initial native viewport delivery
+            active, recent = sessions.rows()
+            print(json.dumps(dict(active=active, recent=recent)))
+        else:
+            curses.wrapper(display, sessions)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sessions.close()
