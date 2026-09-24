@@ -14,7 +14,7 @@ import time
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'lib'))
-from agent_activity import CODEX_IDLE_REGEX, pane_activity, run_activity
+from agent_activity import CODEX_BUSY_REGEX, CODEX_IDLE_REGEX, pane_activity, run_activity
 from sumi_runner import leased
 
 
@@ -35,7 +35,7 @@ class Watch:
                 if event.get('event') == 'pane_update':
                     viewport = event['viewport']
                     self.activity = pane_activity('\n'.join(viewport), lines=max(1, len(viewport)),
-                                                  busy_regex=r'(?m)^\s*[•●]?\s*Working\b[^\n]*esc to interrupt[^\n]*$',
+                                                  busy_regex=CODEX_BUSY_REGEX,
                                                   idle_regex=CODEX_IDLE_REGEX)['activity']
                 elif event.get('event') == 'pane_closed':
                     break

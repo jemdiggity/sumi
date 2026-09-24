@@ -5,10 +5,17 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'lib'))
-from agent_activity import CODEX_IDLE_REGEX, run_activity, pane_activity
+from agent_activity import CODEX_BUSY_REGEX, CODEX_IDLE_REGEX, run_activity, pane_activity
 
 
 class ActivityTest(unittest.TestCase):
+    def test_codex_spinner_frames_keep_busy(self):
+        for prefix in ('', '• ', '● ', '◦ ', '○ ', '· ', '∙ ', '⠋ ', '⠙ ', '  ◦ '):
+            text = prefix + 'Working (26s • esc to interrupt) · 1 background terminal running'
+            self.assertEqual(pane_activity(text, busy_regex=CODEX_BUSY_REGEX)['activity'], 'busy', prefix)
+        self.assertEqual(pane_activity('User says Working (esc to interrupt)',
+                                      busy_regex=CODEX_BUSY_REGEX)['activity'], 'unknown')
+
     def test_turn_events_and_process_result_are_distinct(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'events.jsonl'

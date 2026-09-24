@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 
 CODEX_IDLE_REGEX = r'(?m)^\s*Worked for (?:\d+(?:\.\d+)?[hms]\s*)+(?:[·•]\s*\d{1,2}:\d{2}(?::\d{2})?)?\s*$'
+CODEX_BUSY_REGEX = r'(?m)^[^\w\n]*Working\b[^\n]*esc to interrupt[^\n]*$'
 
 
 def event_tail(path, limit=256 * 1024):
