@@ -377,5 +377,21 @@
       "bin/session-list: native viewport subscriptions for discovered interactive agents, run-event status for managed workers, recent conversations deduplicated by session ID. Unknown never means idle.",
       "Verified live terminal_26 directly below Tasks; existing terminal IDs preserved and focus restored to terminal_2. Capture shows coordinator BUSY and two FINISHED worker conversations. Reusable launcher includes the sidebar split."
     ]
+  },
+  {
+    "id": "LF-22",
+    "title": "Research and draft Sumi feature list",
+    "status": "done",
+    "depends_on": [],
+    "template": "product-discovery@2",
+    "source": "Jeremy: compare HumanLayer, RunPane, Superset, Conductor, Cursor and related tools",
+    "acceptance": [
+      "Compare current first-party product material with linked sources.",
+      "Draft a prioritized feature list distinguishing existing Sumi behavior, proposals, and choices to iterate."
+    ],
+    "evidence": [
+      "docs/PRODUCT-RESEARCH.md: first-party comparison of HumanLayer, RunPane, Superset, Conductor, Cursor, native cmux and Vibe Kanban, checked 2026-09-24; documented claims distinguished from hands-on validation.",
+      "docs/FEATURES.md revision 1: 28 stable feature IDs, current coverage, proposed priorities, three candidate slices, representative review story and open product choices. Draft only; no implementation approval inferred."
+    ]
   }
 ]

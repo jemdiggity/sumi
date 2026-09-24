@@ -2,6 +2,9 @@
 
 A lean software factory assembled from existing tools and composable agent skills.
 
+The draft [feature list](docs/FEATURES.md) records proposed priorities and current
+implementation coverage, informed by [related product research](docs/PRODUCT-RESEARCH.md).
+
 Sumi itself is the working mockup: the experiment is how quickly we can set up
 parallel tasks, isolated Git worktrees, workspaces, and a control layer. The UI
 is replaceable; tmux, cmux TUI, and now Zellij are adapters around the same files
@@ -20,8 +23,8 @@ with me on the mockup before implementation." The skill selects eligible work,
 uses the other factory skills, and records progress in the task file. It runs in
 the current agent session; there is no background scheduler. Explicitly launched
 Codex workers run in their own workspaces with recorded lifecycles.
-LF-2 through LF-4 produced the first design artifact. LF-5 now requires stakeholder
-feedback and agreement before the implementation/prototype branch can proceed.
+LF-2 through LF-4 produced the first HTML design artifact. LF-5 awaits review of
+that experience; separately approved native-tool workspace slices have proceeded.
 
 ## Parallel Codex workspaces
 
