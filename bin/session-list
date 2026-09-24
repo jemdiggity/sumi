@@ -3,6 +3,7 @@
 import argparse
 import curses
 import json
+import os
 from pathlib import Path
 import shlex
 import signal
@@ -77,9 +78,23 @@ class Sessions:
             text=True, stderr=subprocess.DEVNULL, timeout=3)
         panes = json.loads(raw)
         runs = []
-        for path in (ROOT / '.playground/runs').glob('*/run.json'):
+        records = list((ROOT / '.playground/runs').glob('*/run.json'))
+        records += list((ROOT / '.playground/external-runs').glob('*/run.json'))
+        for path in records:
             try:
                 run = json.loads(path.read_text())
+                if path.parent.parent.name == 'external-runs':
+                    run['external'] = True
+                    if run.get('state') == 'running':
+                        try:
+                            if not isinstance(run.get('pid'), int) or run['pid'] <= 0:
+                                raise ProcessLookupError
+                            os.kill(run['pid'], 0)
+                        except PermissionError:
+                            run['state'] = 'orphaned'
+                        except ProcessLookupError:
+                            observed = run_activity(run, 1)['activity']
+                            run['state'] = {'idle': 'exited', 'failed': 'failed'}.get(observed, 'interrupted')
                 if run.get('workspace_session') == self.session:
                     runs.append(run)
             except (OSError, ValueError):
@@ -105,10 +120,11 @@ class Sessions:
         recent = []
         for run in latest.values():
             activity = run_activity(run, 1)['activity']
-            if run['state'] == 'running' and not leased(Path(run['directory']) / 'worker.lock'):
+            if run['state'] == 'running' and not run.get('external') and not leased(Path(run['directory']) / 'worker.lock'):
                 activity = 'unknown'  # stale run file is not proof of a live worker
-            row = (f'{run["task_id"]} / {run["agent"]}',
-                   activity, run['id'])
+            label = run.get('model', run['agent']).replace('gpt-6-', '')
+            row = (f'{run["task_id"]} / {label}', activity,
+                   run['id'] + (' (headless)' if run.get('external') else ''))
             if run['state'] in ('running', 'starting', 'orphaned'):
                 active.append(row)
             else:

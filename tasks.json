@@ -413,13 +413,17 @@
   {
     "id": "LF-24",
     "title": "Pin worker models and account for token usage",
-    "status": "active",
+    "status": "done",
     "depends_on": [],
     "acceptance": [
       "Astra creates a bounded brief; Sol implements it in an isolated worktree.",
       "Record explicit model/effort and report run token deltas without double-counting resumed sessions.",
       "Coordinator reviews implementation and validates against independent cases."
     ],
-    "evidence": []
+    "evidence": [
+      "Astra wrote docs/MODEL-INSTRUMENTATION.md; Sol implemented it in isolated branch sumi/lf-24-model-usage, commit e7c1abb. Reviewed and committed; not merged into main, preserving user-selected integration.",
+      "Coordinator reran all 20 tests and independently checked real LF-18 resume delta (149694 input, 142336 cached, 616 output), interrupted-turn partial evidence, and cache-write preservation without double-counting.",
+      "Coordinator requested repair for unfinished turns after a completion snapshot and missing cache-write counters; Sol repaired in its original conversation. docs/MODEL-INSTRUMENTATION-REVIEW.md records bootstrap evidence; this is not a comparative benchmark."
+    ]
   }
 ]

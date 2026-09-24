@@ -100,6 +100,13 @@ subscriptions for screen-based busy hints (`~`). Managed workers use their
 event logs; finished conversations appear under Recent, with resumed attempts
 grouped by conversation. A missing screen indicator is unknown, not idle.
 Use `j/k` to scroll, or `bin/session-list --once` for a JSON snapshot.
+Registered headless processes also appear, labelled `(headless)`. Bootstrap
+registrations live in `.playground/external-runs/<id>/run.json`, with `id`,
+`task_id`, `agent`, optional `model`, `session_id`, `workspace_session`,
+`created_at`, `directory`, `state`, and a positive `pid` while running.
+Their directory supplies `events.jsonl`. These are manually registered external
+runs, not automatically discovered processes; PID checks alone cannot detect
+PID reuse. Normal managed runs retain their worker-lease checks.
 
 ## Zellij comparison
 
