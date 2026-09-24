@@ -425,5 +425,27 @@
       "Coordinator reran all 20 tests and independently checked real LF-18 resume delta (149694 input, 142336 cached, 616 output), interrupted-turn partial evidence, and cache-write preservation without double-counting.",
       "Coordinator requested repair for unfinished turns after a completion snapshot and missing cache-write counters; Sol repaired in its original conversation. docs/MODEL-INSTRUMENTATION-REVIEW.md records bootstrap evidence; this is not a comparative benchmark."
     ]
+  },
+  {
+    "id": "LF-25",
+    "title": "Freeze feedback bridge experiment and obtain Astra design",
+    "status": "active",
+    "depends_on": [],
+    "acceptance": [
+      "Produce versioned artifacts and record validation, usage, and limitations."
+    ],
+    "evidence": []
+  },
+  {
+    "id": "LF-26",
+    "title": "Compare four implementations of the local feedback bridge",
+    "status": "proposed",
+    "depends_on": [
+      "LF-25"
+    ],
+    "acceptance": [
+      "Produce versioned artifacts and record validation, usage, and limitations."
+    ],
+    "evidence": []
   }
 ]
