@@ -24,6 +24,7 @@ def exists():
 def start():
     if exists():
         configure_keys()
+        task_pane()
         print('Playground is already running.')
         return
     tmux('new-session', '-d', '-s', SESSION, '-n', 'work', '-c', str(STATE / 'demo'))
@@ -34,6 +35,7 @@ def start():
     # Respawn the first shell so it inherits the isolated Radicle environment.
     tmux('respawn-pane', '-k', '-t', SESSION + ':work', '-c', str(STATE / 'demo'))
     tmux('split-window', '-h', '-t', SESSION + ':work', '-c', str(STATE / 'demo'))
+    task_pane()
     command = shlex.join(['forgejo', 'web', '--work-path', str(STATE / 'forgejo'),
                          '--config', str(STATE / 'forgejo/app.ini')])
     tmux('new-window', '-t', SESSION, '-n', 'forgejo', command)
@@ -41,9 +43,30 @@ def start():
     print('Started. Forgejo: http://127.0.0.1:3180')
 
 def configure_keys():
+    # Preserve modified Enter and other extended keys through the multiplexer.
+    tmux('set-option', '-s', 'extended-keys', 'always')
+    tmux('set-option', '-s', 'extended-keys-format', 'csi-u')
+    tmux('set-option', '-s', 'terminal-features[10]', 'xterm-ghostty:extkeys')
+    # Some agent CLIs leave the pane in VT10x mode. Forward the explicit
+    # Shift+Enter CSI-u bytes instead of allowing legacy mode to erase Shift.
+    tmux('bind-key', '-n', 'S-Enter', 'send-keys', '-H',
+         '1b', '5b', '31', '33', '3b', '32', '75')
     # Leave Ctrl+B available for shell/TUI cursor movement.
     tmux('set-option', '-t', SESSION, 'prefix', 'C-g')
     tmux('bind-key', 'C-g', 'send-prefix')
+
+def task_pane():
+    panes = subprocess.check_output(
+        ['tmux', '-L', SESSION, 'list-panes', '-t', SESSION + ':work',
+         '-F', '#{pane_id} #{@sumi_role}'], text=True).splitlines()
+    if any(line.endswith(' tasks') for line in panes):
+        return
+    target = panes[0].split()[0]
+    pane = subprocess.check_output(
+        ['tmux', '-L', SESSION, 'split-window', '-h', '-b', '-l', '30', '-d',
+         '-t', target, '-P', '-F', '#{pane_id}', str(ROOT / 'bin/task-list')],
+        text=True).strip()
+    tmux('set-option', '-p', '-t', pane, '@sumi_role', 'tasks')
 
 command = sys.argv[1] if len(sys.argv) > 1 else 'help'
 if command == 'start':
@@ -62,5 +85,10 @@ elif command == 'rad':
 elif command == 'status':
     print('tmux:', 'running' if exists() else 'stopped')
     run('rad', 'issue', 'list', cwd=STATE / 'demo', env=ENV)
+elif command == 'tasks':
+    if not exists():
+        start()
+    else:
+        task_pane()
 else:
-    print('Usage: bin/playground {start|attach|stop|status|rad <arguments...>}')
+    print('Usage: bin/playground {start|attach|stop|status|tasks|rad <arguments...>}')

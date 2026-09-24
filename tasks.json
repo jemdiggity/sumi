@@ -1,0 +1,213 @@
+[
+  {
+    "id": "LF-1",
+    "title": "Design the lean factory",
+    "status": "blocked",
+    "depends_on": [],
+    "acceptance": [
+      "A representative artifact shows one end-to-end task lifecycle.",
+      "Stakeholder agreement records a revision, scope, and conditions."
+    ],
+    "evidence": [],
+    "template": "product-discovery@2",
+    "source": "Jeremy: develop the environment through recursive tasks",
+    "children": [
+      {
+        "id": "LF-2",
+        "title": "Sketch the task journey",
+        "status": "done",
+        "depends_on": [],
+        "acceptance": [
+          "Show idea intake, template selection, subtasks, design review, approved build, and verification using one factory improvement as the example."
+        ],
+        "evidence": [
+          {
+            "path": "docs/TASK-JOURNEY.md",
+            "sha256": "bb0478d9d6b646ec54c0b8f2d6cec06a88500cc6add7f6a118fbc8ccefd1ba4f",
+            "result": "Eight-step journey covers intake, design iterations, scoped approval, implementation, validation, and follow-up tasks."
+          }
+        ],
+        "skills": [
+          "factory-design"
+        ]
+      },
+      {
+        "id": "LF-3",
+        "title": "Mock up tasks and detail view",
+        "status": "done",
+        "depends_on": [
+          "LF-2"
+        ],
+        "acceptance": [
+          "Demonstrate nested tasks, selection, status, dependencies, and linked artifacts.",
+          "Include empty, waiting-for-review, failed-run, and completed examples; label simulated content."
+        ],
+        "evidence": [
+          {
+            "path": "mockups/factory.html",
+            "sha256": "69ccac806a7c9e091b96bbce4d3e3fc5114bce3c864f547c551afc098c21eaa3",
+            "result": "DOM checks passed for selection and empty/failed/completed states. Visual review remains with Jeremy; browser automation unavailable."
+          }
+        ],
+        "skills": [
+          "factory-design"
+        ]
+      },
+      {
+        "id": "LF-4",
+        "title": "Mock up the review loop",
+        "status": "done",
+        "depends_on": [
+          "LF-2"
+        ],
+        "acceptance": [
+          "Demonstrate comments anchored to a proposal revision and how an agent would address them.",
+          "Show approval for a bounded slice and a changed design returning to review."
+        ],
+        "evidence": [
+          {
+            "path": "mockups/factory.html",
+            "sha256": "69ccac806a7c9e091b96bbce4d3e3fc5114bce3c864f547c551afc098c21eaa3",
+            "result": "DOM-tested task/revision anchored comments, simulated acknowledgment, scoped approval, and invalidation after a material change."
+          },
+          {
+            "path": "docs/DESIGN-REVIEW.md",
+            "sha256": "940bf27016d93281488a6d47eff613ec3b139f9e59e1fac104878df54c063d46"
+          }
+        ],
+        "skills": [
+          "factory-design",
+          "factory-feedback"
+        ]
+      },
+      {
+        "id": "LF-5",
+        "title": "Iterate and agree on a slice",
+        "status": "blocked",
+        "depends_on": [
+          "LF-3",
+          "LF-4"
+        ],
+        "acceptance": [
+          "Present the combined artifact to Jeremy, revise from actual feedback, and record explicit agreement on revision and scope.",
+          "Capture behavior that the mockup cannot express in a companion spec."
+        ],
+        "evidence": [
+          {
+            "path": "docs/DESIGN-REVIEW.md",
+            "result": "Concrete review artifact and questions prepared; mockup at http://127.0.0.1:55267/factory.html"
+          }
+        ],
+        "skills": [
+          "factory-design",
+          "factory-feedback"
+        ],
+        "blocked_reason": "Awaiting Jeremy's review of design revision 1 and decision on the first slice. No approval inferred from the self-improvement request."
+      }
+    ],
+    "blocked_reason": "Design work complete for revision 1; LF-5 awaits stakeholder feedback and scoped agreement."
+  },
+  {
+    "id": "LF-6",
+    "title": "Prototype the agreed slice",
+    "status": "proposed",
+    "depends_on": [
+      "LF-5"
+    ],
+    "acceptance": [
+      "One factory improvement runs through the agreed flow using native tools.",
+      "Results and remaining gaps trace back to the approved artifact."
+    ],
+    "evidence": [],
+    "template": "engineering-exploration@2",
+    "children": [
+      {
+        "id": "LF-7",
+        "title": "Prototype durable task state",
+        "status": "proposed",
+        "depends_on": [
+          "LF-5"
+        ],
+        "acceptance": [
+          "Demonstrate parent/child tasks, dependency checks, artifact references, and recovery after closing a pane.",
+          "Refine scope from the approved artifact before starting."
+        ],
+        "evidence": []
+      },
+      {
+        "id": "LF-8",
+        "title": "Prototype native agent handoff",
+        "status": "proposed",
+        "depends_on": [
+          "LF-7"
+        ],
+        "acceptance": [
+          "Demonstrate one explicit task handoff to a native agent CLI in a worktree, with task/run/artifact linkage.",
+          "Confirm the chosen agent and execution scope before launching; pane IDs are not task IDs."
+        ],
+        "evidence": []
+      },
+      {
+        "id": "LF-9",
+        "title": "Try Radicle feedback round-trip",
+        "status": "proposed",
+        "depends_on": [
+          "LF-7"
+        ],
+        "acceptance": [
+          "Use a private local review record for an actual factory artifact revision and retrieve its feedback.",
+          "Demonstrate the approved feedback mapping without public publication or fabricated stakeholder comments."
+        ],
+        "evidence": []
+      },
+      {
+        "id": "LF-10",
+        "title": "Use the factory to improve itself",
+        "status": "proposed",
+        "depends_on": [
+          "LF-8",
+          "LF-9"
+        ],
+        "acceptance": [
+          "Choose a real follow-up improvement discovered during the prototype and capture it as a child task.",
+          "Exercise the approved workflow and record what should change in tools or skills."
+        ],
+        "evidence": []
+      }
+    ]
+  },
+  {
+    "id": "LF-11",
+    "title": "Fix terminal tab and live task status",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "F3 opens a regular shell where Neovim can be launched and exited.",
+      "The sidebar identifies active tasks from tasks.json.",
+      "The orchestrator persists status transitions before starting work and after outcomes."
+    ],
+    "evidence": [
+      "bin/artifact-viewer: F3 launches a login shell at the project root; verified live zsh pane.",
+      "bin/task-list: verified Working: LF-11 while this task was active.",
+      "skills/factory-orchestrator/SKILL.md: explicit persisted lifecycle transitions; validator passed."
+    ],
+    "source": "Jeremy: terminal in place of Neovim and visible active task",
+    "template": "maintenance@2"
+  },
+  {
+    "id": "LF-12",
+    "title": "Compare cmux in Ghostty",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "A separate Ghostty tab hosts cmux TUI with the task list, terminal, document views, and monitor where supported.",
+      "Both workspaces share task and artifact files; existing tmux work remains available."
+    ],
+    "evidence": [
+      "cmux TUI binary SHA-256 checked against vendor manifest; local state under .playground/cmux.",
+      "Ghostty tab tab-77456c6000 created; cmux control API confirms attached TUI and six terminal tabs.",
+      "Layout ratios adjusted to narrow task sidebar and lower-right CPU pane."
+    ],
+    "source": "Jeremy: run the same setup in cmux in another Ghostty tab"
+  }
+]

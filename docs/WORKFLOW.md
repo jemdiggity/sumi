@@ -12,7 +12,21 @@ the terminal transcript.
 Confirmed direction: dynamic structure means both composing skills per task and
 revising the task plan as evidence arrives. Jeremy confirmed both aspects.
 
-## Current tasks
+## Current task source
+
+`../tasks.json` is now the source of truth for the real task tree displayed in
+the sidebar. LF-1 groups iterative design and stakeholder agreement (LF-2–LF-5).
+LF-6 groups the subsequent prototypes and self-improvement loop (LF-7–LF-10).
+The initial template is product-discovery@2, followed by engineering-exploration@2.
+LF-2–LF-4 have design artifacts and validation evidence. LF-5 awaits Jeremy's
+feedback and scoped agreement. LF-12 records the running cmux comparison.
+No implementation approval or running worker agent is implied.
+
+## Earlier planning notes
+
+The W-series below records earlier skill-development work and candidate experiments;
+it is historical context, not a second task queue. W02/W03 are now represented by
+LF-4/LF-5/LF-9, and W04 by LF-10. Keep operational status in tasks.json.
 
 | ID | Result | Status | Dependencies | Evidence |
 | --- | --- | --- | --- | --- |
@@ -28,6 +42,8 @@ not a required lifecycle for every future task. No agent workers are launched.
 
 ## Skill drafts
 
+- `~/.codex/skills/factory-orchestrator/SKILL.md`: process the task queue serially,
+  honor dependencies and agreement, and record evidence while adapting the plan.
 - `~/.codex/skills/factory-workflow/SKILL.md`: evolve tasks and dependencies while
   preserving outcome, constraints, IDs, and completion evidence.
 - `~/.codex/skills/factory-feedback/SKILL.md`: anchor review comments to artifact
@@ -37,7 +53,8 @@ not a required lifecycle for every future task. No agent workers are launched.
 
 ## Decisions
 
-- Start with local Markdown state. A database or scheduler is not yet justified.
+- Start with local files. The sidebar task tree uses versionable JSON, with this
+  Markdown file retaining context. A database or scheduler is not yet justified.
 - Keep backend details out of reusable skills. The existing playground is a
   place to exercise the workflow, not a dependency of the workflow definition.
 - Do not prescribe a fixed sequence of specialist skills. Select the next
@@ -55,7 +72,7 @@ not a required lifecycle for every future task. No agent workers are launched.
 
 ## Next experiment
 
-Use `.playground/demo/WORKSPACE.md` as a candidate review artifact. Capture its
-revision before reviewing it. Choose local feedback or the existing private
-Radicle issue as the record. Establish the actual feedback before revising it;
-do not invent reviewer comments to demonstrate progress.
+Start LF-2: sketch one end-to-end task journey using a real factory improvement.
+Reuse docs/WORKSPACE.md as context, then make the task and review interactions
+concrete in LF-3/LF-4. Establish actual feedback before revising the design;
+do not invent reviewer comments or approval to demonstrate progress.

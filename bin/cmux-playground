@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Access the isolated cmux comparison session installed in this playground."""
+import os
+from pathlib import Path
+import sys
+
+root = Path(__file__).resolve().parent.parent
+state = root / '.playground/cmux'
+binary = state / 'bin/cmux'
+if not binary.exists():
+    sys.exit('cmux is not installed in .playground/cmux/bin; see README.md.')
+os.environ['CMUX_TUI_CONFIG'] = str(state / 'config.json')
+os.environ.pop('TMUX', None)
+args = sys.argv[1:] or ['attach']
+os.execv(str(binary), [str(binary), '--session', 'sumi-cmux', *args])
