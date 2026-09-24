@@ -429,22 +429,52 @@
   {
     "id": "LF-25",
     "title": "Freeze feedback bridge experiment and obtain Astra design",
-    "status": "active",
+    "status": "done",
     "depends_on": [],
     "acceptance": [
       "Produce versioned artifacts and record validation, usage, and limitations."
     ],
-    "evidence": []
+    "evidence": [
+      "Frozen Review.js protocol and completed Astra design preserved in disposable repo experiment/superseded-reviewjs/. Superseded by Jeremy selecting Agentation; no comparative implementations launched.",
+      "Design model gpt-6-astra medium verified; 345.95s, cumulative input 180159 (cached 144896), output 11144. These are exploration costs, not a comparison result."
+    ]
   },
   {
     "id": "LF-26",
     "title": "Compare four implementations of the local feedback bridge",
     "status": "proposed",
     "depends_on": [
-      "LF-25"
+      "LF-28"
     ],
     "acceptance": [
       "Produce versioned artifacts and record validation, usage, and limitations."
+    ],
+    "evidence": []
+  },
+  {
+    "id": "LF-27",
+    "title": "Verify Agentation toolbar and local MCP feedback loop",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "Mount React only for the toolbar on the existing vanilla mockup.",
+      "Verify browser annotation retrieval and an agent reply over local MCP.",
+      "Record differences from the approved Sumi feedback lifecycle before revising the experiment."
+    ],
+    "evidence": [
+      "Agentation 3.1.2 + MCP 1.3.2: actual Chrome annotation retrieved through MCP, two replies stored; second appeared in added read-only panel without refresh.",
+      "Restarted local server and verified annotation + both replies persisted, status pending. Native toolbar thread-display gap documented in agentation/README.md."
+    ]
+  },
+  {
+    "id": "LF-28",
+    "title": "Design Agentation review lifecycle for the model comparison",
+    "status": "active",
+    "depends_on": [
+      "LF-27"
+    ],
+    "acceptance": [
+      "Freeze revised shared baseline and obtain fresh Astra technical design preserving seven reviewer decisions."
     ],
     "evidence": []
   }

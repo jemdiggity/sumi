@@ -1,15 +1,16 @@
 # Local mockup feedback bridge
 
-Product brief · revision 1 · 2026-09-24.
+Product brief · revision 2 · 2026-09-24.
 
 Proposed first measured Astra/Sol/Luna feature, replacing the larger parallel
 workspace as the competition candidate. The existing workspace mockup is the
 review target. These are product requirements, not the measured Astra technical
-design. No comparative implementations have been launched.
+design. No comparative implementations have been launched. Jeremy selected Agentation
+with React only for the toolbar after reviewing the transport tradeoff.
 
 ## Intended experience
 
-Jeremy annotates a locally served HTML mockup using Review.js and explicitly
+Jeremy annotates a locally served HTML mockup using Agentation and explicitly
 sends the review. An agent retrieves the saved feedback when Jeremy asks,
 reopens the reviewed revision and scene, and replies or proposes a fix.
 Agent replies appear automatically while the review is open. Jeremy decides
@@ -57,8 +58,19 @@ than additional user answers:
   in an active foreground review, and reconciliation on returning to the page.
 - A proposed fix references its target artifact revision. It does not retarget
   the original annotation or resolve it automatically.
-- Review.js supplies annotations; a small local service supplies persistence
-  and agent access. The current static file server does not implement this.
+- Agentation supplies the annotation toolbar and local HTTP/MCP transport.
+  Mount React only for the toolbar; the mockup remains vanilla HTML. Reuse the
+  existing server and SQLite persistence rather than rebuilding that transport.
+  Its mutable native annotations are not the immutable review ledger.
+- Preserve the explicit Send review boundary: native drafts must not be
+  presented to agents as submitted feedback. The Sumi-facing agent workflow
+  permits replies and fix proposals, not resolution/dismissal; the reviewer owns
+  those transitions. This is trusted local workflow separation, not protection
+  against an adversarial process with filesystem access.
+- A feasibility test verifies annotation retrieval/reply through real MCP and
+  persistence across restart. The installed toolbar does not display threads;
+  a shared read-only panel demonstrates automatic replies. Complete the user
+  workflow on that basis. See the disposable repo agentation/README.md.
 - The present mockup preview uses a sandboxed iframe. The test fixture should
   put the annotation toolbar and mockup in the same document, avoiding a
   cross-frame selection dependency.
