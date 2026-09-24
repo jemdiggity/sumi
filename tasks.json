@@ -242,7 +242,7 @@
   {
     "id": "LF-15",
     "title": "Exercise a task in its own worktree and workspace",
-    "status": "proposed",
+    "status": "blocked",
     "depends_on": [
       "LF-13"
     ],
@@ -250,8 +250,14 @@
       "Choose a bounded real task and associate its stable ID with a Git worktree, agent run, and workspace.",
       "Demonstrate launch, inspection, and recovery using a chosen UI adapter; record setup friction."
     ],
-    "evidence": [],
-    "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control."
+    "evidence": [
+      "Current request: build mechanics for parallel agent workspaces. Preparing a concrete CLI contract and verifying Zellij launch controls; provider choice pending.",
+      "docs/PARALLEL-RUNS.md revision 1: concrete prepare/start/runs/inspect/focus interface and run/worktree lifecycle.",
+      ".playground/parallel-proof/evidence.json: two local processes overlapped for six seconds in distinct Git worktrees and Zellij tabs. No agent runs launched; proposed launch CLI not implemented yet."
+    ],
+    "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control.",
+    "template": "engineering-exploration@2",
+    "blocked_reason": "Parallel-run contract revision 1 is ready for review; awaiting choice of first agent pair and agreement on the launch slice."
   },
   {
     "id": "LF-16",
