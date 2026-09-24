@@ -2,6 +2,13 @@
 
 A lean software factory assembled from existing tools and composable agent skills.
 
+Sumi itself is the working mockup: the experiment is how quickly we can set up
+parallel tasks, isolated Git worktrees, workspaces, and a control layer. The UI
+is replaceable; tmux, cmux TUI, and now Zellij are adapters around the same files
+and tools. Parallel worker execution and automatic worktree provisioning are
+not implemented yet. The earlier HTML proposal is one design artifact, not a
+prerequisite for these explicitly requested workspace experiments.
+
 The `skills/` directory versions the factory skill drafts installed under
 `~/.codex/skills/`. Keep those working copies synchronized when revising skills.
 `docs/WORKSPACE.md` preserves the proposal shown in the disposable demo repository.
@@ -14,6 +21,45 @@ uses the other factory skills, and records progress in the task file. It runs in
 the current agent session; there is no background scheduler or worker pool yet.
 LF-2 through LF-4 produced the first design artifact. LF-5 now requires stakeholder
 feedback and agreement before the implementation/prototype branch can proceed.
+
+## Zellij comparison
+
+Zellij 0.45.1 is installed through Homebrew. In a new Ghostty tab, run:
+
+```sh
+cd /Users/jeremyhale/work/sumi
+bin/zellij-playground
+```
+
+The `sumi-zellij` session has the task list on the left, an agent shell in the
+center, and a stack of Markdown, Diff, and Terminal panes above a CPU monitor
+on the right. Click a stack title to expand that viewer. Terminal is a regular
+shell: run `nvim` and quit back to the prompt. Viewers can be rerun with Enter
+after they exit. No agent CLI is launched automatically.
+
+Only Ctrl-g is reserved in normal typing. After Ctrl-g: arrows (or h/j/k/l)
+focus a pane, n adds a pane, t adds a tab, [/] change tabs, f toggles fullscreen,
+and d detaches. Escape cancels; Ctrl-g twice sends a literal Ctrl-g.
+These are Sumi's bindings, not Zellij's defaults.
+
+```sh
+bin/zellij-playground start   # create in background, or leave existing session alone
+bin/zellij-playground status  # structured pane IDs, commands, and geometry
+bin/zellij-playground action dump-screen --pane-id terminal_1
+bin/zellij-playground action new-pane --name scratch --cwd /path/to/worktree
+bin/zellij-playground stop    # ends this session and its processes
+```
+
+The launcher generates a layout under `.playground/zellij/` and uses the tracked
+`config/zellij.kdl`. Background creation ignored the initial layout in this
+build, so the launcher applies it explicitly to a fresh session through the
+control CLI. Existing sessions are not relaid out on attach/start.
+Configuration validation, six live terminal panes, task/CPU screen capture,
+attach, and Ctrl-g/d detach were verified. Ghostty mouse behavior, transcript
+hyperlinks, and Shift+Enter in an agent CLI still need interactive comparison.
+Zellij's native [layouts](https://zellij.dev/documentation/creating-a-layout)
+and [control CLI](https://zellij.dev/documentation/programmatic-control.html)
+are the adapter surface for this experiment.
 
 ## cmux comparison
 
@@ -32,6 +78,8 @@ are under `.playground/cmux/` and are not committed. This wrapper accesses the
 installed experiment; it is not yet a portable installer. cmux uses Ctrl-g as
 its prefix. Click the right-pane Markdown/Diff/Terminal tabs; Ctrl-g then t creates
 a new terminal tab. The keyboard behavior is still part of this comparison.
+Transcript hyperlinks currently fail for Jeremy, including Cmd+Shift+click;
+LF-14 tracks this unresolved issue.
 
 ## Design review
 

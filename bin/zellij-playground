@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Recreate the Sumi workspace with Zellij; share tools and task state."""
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+STATE = ROOT / '.playground/zellij'
+SESSION = 'sumi-zellij'
+binary = shutil.which('zellij')
+if not binary:
+    sys.exit('Install Zellij first: brew install zellij')
+STATE.mkdir(parents=True, exist_ok=True)
+q = lambda value: json.dumps(str(value))
+layout = STATE / 'layout.kdl'
+layout.write_text(f'''layout {{
+    cwd {q(ROOT)}
+    tab name="Sumi" {{
+        pane split_direction="vertical" {{
+            pane name="Tasks" size="17%" command={q(ROOT / 'bin/task-list')}
+            pane name="Agent / shell" size="43%" focus=true
+            pane size="40%" {{
+                pane stacked=true size="78%" {{
+                    pane name="Markdown" command={q(ROOT / 'bin/artifact-viewer')} {{ args "markdown"; }}
+                    pane name="Diff" command={q(ROOT / 'bin/artifact-viewer')} {{ args "diff"; }}
+                    pane name="Terminal / nvim" expanded=true
+                }}
+                pane name="CPU" command="/usr/bin/top" {{ args "-s" "2" "-n" "0"; }}
+            }}
+        }}
+        pane size=1 borderless=true {{ plugin location="zellij:compact-bar"; }}
+    }}
+}}
+''')
+args = sys.argv[1:] or ['attach']
+base = [binary, '--config', str(ROOT / 'config/zellij.kdl')]
+os.environ.pop('ZELLIJ', None)
+os.environ.pop('ZELLIJ_SESSION_NAME', None)
+os.environ.pop('TMUX', None)
+os.chdir(ROOT)
+if args in (['start'], ['attach']):
+    sessions = subprocess.run([binary, 'list-sessions', '--short', '--no-formatting'],
+                              capture_output=True, text=True)
+    if SESSION not in sessions.stdout.splitlines():
+        subprocess.run([*base, 'attach', '--create-background', SESSION], check=True)
+        # 0.45.1 background creation ignored the initial layout in this experiment.
+        # Apply it explicitly, only to the fresh session, after its first tab exists.
+        for _ in range(50):
+            panes = subprocess.run([*base, '--session', SESSION, 'action', 'list-panes', '--json'],
+                                   capture_output=True, text=True)
+            if panes.returncode == 0 and json.loads(panes.stdout or '[]'):
+                break
+            time.sleep(0.1)
+        else:
+            sys.exit('Zellij did not become ready; inspect sumi-zellij before retrying.')
+        subprocess.run([*base, '--session', SESSION, 'action', 'override-layout', str(layout)], check=True)
+    if args == ['start']:
+        print(f'{SESSION} is running. Attach with bin/zellij-playground')
+        sys.exit(0)
+    args = ['attach', SESSION]
+elif args == ['status']:
+    args = ['--session', SESSION, 'action', 'list-panes', '--json']
+elif args == ['stop']:
+    args = ['kill-session', SESSION]
+else:
+    args = ['--session', SESSION, *args]
+os.execv(binary, [*base, *args])

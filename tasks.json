@@ -209,5 +209,48 @@
       "Layout ratios adjusted to narrow task sidebar and lower-right CPU pane."
     ],
     "source": "Jeremy: run the same setup in cmux in another Ghostty tab"
+  },
+  {
+    "id": "LF-13",
+    "title": "Compare Zellij as a Sumi UI adapter",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "Launch a repeatable Zellij workspace using the existing task list, shell, Markdown/diff viewers, and CPU monitor.",
+      "Document control commands and keyboard choices; record what is verified and what needs interactive comparison."
+    ],
+    "evidence": [
+      "bin/zellij-playground and config/zellij.kdl: repeatable launcher, existing-session preservation, native right-pane stack, shared task/viewer tools.",
+      "Zellij 0.45.1 installed; configuration check passed. Control API verified six running terminal panes. Task capture showed Working: LF-13; CPU capture showed usage.",
+      "Attached using a 220x60 PTY and detached with Ctrl-g/d successfully. Repeated start preserved the existing session.",
+      "Interactive Ghostty hyperlink and agent Shift+Enter checks remain unverified; cmux hyperlink failure recorded as LF-14."
+    ],
+    "source": "Jeremy: Sumi itself is the mockup for rapidly assembling parallel tasks, worktrees, workspaces, and a control layer; try another multiplexer."
+  },
+  {
+    "id": "LF-14",
+    "title": "Investigate cmux transcript hyperlinks",
+    "status": "proposed",
+    "depends_on": [],
+    "acceptance": [
+      "Determine why transcript URLs cannot be opened and verify a fix or document an upstream limitation."
+    ],
+    "evidence": [
+      "Jeremy reports Cmd+Shift+click also fails. No working fix verified."
+    ]
+  },
+  {
+    "id": "LF-15",
+    "title": "Exercise a task in its own worktree and workspace",
+    "status": "proposed",
+    "depends_on": [
+      "LF-13"
+    ],
+    "acceptance": [
+      "Choose a bounded real task and associate its stable ID with a Git worktree, agent run, and workspace.",
+      "Demonstrate launch, inspection, and recovery using a chosen UI adapter; record setup friction."
+    ],
+    "evidence": [],
+    "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control."
   }
 ]
