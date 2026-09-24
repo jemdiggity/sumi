@@ -1,7 +1,7 @@
 # Parallel task workspaces — revision 1
 
-Proposed slice for Jeremy's review. Sumi itself is the prototype. The commands
-below are a proposed interface, not implemented commands yet.
+Jeremy approved this slice by selecting two Codex agents. Sumi itself is the
+prototype. The first implementation supports Codex and Zellij.
 
 ## Use it
 
@@ -15,7 +15,7 @@ bin/sumi start LF-17-<id>
 # opens a Zellij tab containing the native agent CLI and a shell
 # task becomes active before the agent starts
 
-bin/sumi prepare LF-18 --agent claude
+bin/sumi prepare LF-18 --agent codex
 bin/sumi start LF-18-<id>
 # second independent worktree/tab; both agents can run concurrently
 
@@ -25,6 +25,13 @@ bin/sumi inspect LF-17-<id>
 # task contract, recorded command, Git status, exit result, workspace reference
 bin/sumi focus LF-17-<id>
 # switch to its tab; leave other agents running
+
+bin/sumi resume LF-17-<id> --prompt "Address the review findings"
+# prepares a NEW attempt using the same worktree and exact Codex session
+# start the returned new run ID explicitly
+
+bin/sumi task LF-17 --status done --evidence "Reviewed artifact and checks ..."
+# coordinator records acceptance after review; no merge is performed
 ```
 
 ## Contract
@@ -70,6 +77,32 @@ test repository and a shell. Two six-second processes overlapped in time and
 wrote independent `result.json` files in their own worktrees. Both passed.
 Local evidence is `.playground/parallel-proof/evidence.json`.
 
-This proves concurrent process launch and working-directory isolation. It does
-not yet prove agent session recovery, task claiming, dependency enforcement,
-or the proposed `bin/sumi` commands. No model-backed workers were launched.
+This initial probe proved concurrent process launch and working-directory
+isolation. Subsequent runner tests cover atomic competing claims, dependency
+and cycle rejection, two overlapping fixture workers, duplicate start refusal,
+nonzero exit, lost worker detection, and preparation of a resumed attempt.
+
+## Implementation notes
+
+`bin/sumi` controls durable run records under `.playground/runs/`, with one
+advisory lock for run/task mutations and an independent lifetime lease for each
+worker. Use the CLI for task outcomes while workers run; direct edits to
+`tasks.json` do not participate in this lock. Run records are saved before task
+status projection; `runs`/`inspect` re-project it after a partial write failure.
+
+Agent panes run native `codex exec --json` and display messages/commands. Raw
+events, stderr, final message, exact command, and the emitted Codex thread ID
+are retained per run. The adjacent shell is available for interactive tools.
+Codex uses workspace-write permissions and no interactive approval prompts;
+no blanket sandbox bypass or model override is added. Worktrees isolate files,
+not processes, ports, dependencies, credentials, or all Git metadata.
+
+Exits become task `blocked` awaiting review, never automatic `done`. Closing a
+workspace preserves all files; `inspect` reports a missing workspace. If a worker
+dies without finalizing, `runs`/`inspect` detects its lost lease (with a 30-second
+startup grace) and records interruption. Resumption requires a captured session
+ID; if none exists, return the task to ready and prepare a fresh run. There is
+no background scheduling, automatic retry, merge, cleanup, or migration of a
+running process between muxers.
+
+Run `python3 -m unittest discover -s tests -v` for the local, no-model tests.

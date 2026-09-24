@@ -242,7 +242,7 @@
   {
     "id": "LF-15",
     "title": "Exercise a task in its own worktree and workspace",
-    "status": "blocked",
+    "status": "active",
     "depends_on": [
       "LF-13"
     ],
@@ -253,11 +253,11 @@
     "evidence": [
       "Current request: build mechanics for parallel agent workspaces. Preparing a concrete CLI contract and verifying Zellij launch controls; provider choice pending.",
       "docs/PARALLEL-RUNS.md revision 1: concrete prepare/start/runs/inspect/focus interface and run/worktree lifecycle.",
-      ".playground/parallel-proof/evidence.json: two local processes overlapped for six seconds in distinct Git worktrees and Zellij tabs. No agent runs launched; proposed launch CLI not implemented yet."
+      ".playground/parallel-proof/evidence.json: two local processes overlapped for six seconds in distinct Git worktrees and Zellij tabs. No agent runs launched; proposed launch CLI not implemented yet.",
+      "Jeremy approved the first parallel-agent slice by selecting Two Codex agents. Scope: one task/worktree/tab per worker, run records, explicit review/merge; docs/PARALLEL-RUNS.md revision 1."
     ],
     "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control.",
-    "template": "engineering-exploration@2",
-    "blocked_reason": "Parallel-run contract revision 1 is ready for review; awaiting choice of first agent pair and agreement on the launch slice."
+    "template": "engineering-exploration@2"
   },
   {
     "id": "LF-16",
@@ -276,5 +276,33 @@
       "bin/zellij-playground includes usage monitor in new workspace layouts.",
       "Jeremy requested weekly remaining: monitor now selects the 10080-minute secondary window, displays 100 - usedPercent and local weekly reset. Verified live pane: Claude 61% remaining, Codex 64% remaining. Missing weekly data remains unavailable."
     ]
+  },
+  {
+    "id": "LF-17",
+    "title": "Review parallel runner failure handling",
+    "status": "ready",
+    "depends_on": [
+      "LF-13"
+    ],
+    "acceptance": [
+      "Review the implemented bin/sumi and lib/sumi_runner.py for concrete correctness issues in task claiming, concurrent launch, failure recovery, and worktree isolation.",
+      "Write findings with file references and reproduction ideas to docs/RUNNER-REVIEW.md in your worktree. Do not change implementation, tasks.json, or other files. If no issues are found, state remaining limitations."
+    ],
+    "evidence": [],
+    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment."
+  },
+  {
+    "id": "LF-18",
+    "title": "Write the parallel workspace quickstart",
+    "status": "ready",
+    "depends_on": [
+      "LF-13"
+    ],
+    "acceptance": [
+      "Exercise bin/sumi --help and inspect the implementation and docs/PARALLEL-RUNS.md without starting agents or mutating the coordinator.",
+      "Write docs/RUNNING-AGENTS.md in your own worktree with actual commands for prepare/start/runs/inspect/focus/resume, task review, and known limits. Do not change implementation, tasks.json, or other files."
+    ],
+    "evidence": [],
+    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment."
   }
 ]
