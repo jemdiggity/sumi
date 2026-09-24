@@ -102,7 +102,7 @@
           "factory-design",
           "factory-feedback"
         ],
-        "blocked_reason": "Awaiting Jeremy's review of design revision 1 and decision on the first slice. No approval inferred from the self-improvement request."
+        "blocked_reason": "Custom HTML mockup revision 1 awaits Jeremy review. Native-tool mechanics were separately approved and completed under LF-15/LF-6; this gate applies only to the proposed custom HTML experience."
       }
     ],
     "blocked_reason": "Design work complete for revision 1; LF-5 awaits stakeholder feedback and scoped agreement."
@@ -110,34 +110,39 @@
   {
     "id": "LF-6",
     "title": "Prototype the agreed slice",
-    "status": "proposed",
+    "status": "done",
     "depends_on": [
-      "LF-5"
+      "LF-15"
     ],
     "acceptance": [
       "One factory improvement runs through the agreed flow using native tools.",
       "Results and remaining gaps trace back to the approved artifact."
     ],
-    "evidence": [],
+    "evidence": [
+      "Scope reconciled to the separately approved live native-tool slice in docs/PARALLEL-RUNS.md. LF-5 remains a gate for the custom HTML design only. Jeremy explicitly requested continuing tasks and local Radicle exploration.",
+      "Approved native-tool slice exercised end-to-end: LF-7 durable state, LF-8 real agent handoff, LF-9 revision-specific local Radicle feedback, LF-10/20 observed improvement with validation. Custom HTML design and automatic scheduling are outside this completed slice."
+    ],
     "template": "engineering-exploration@2",
     "children": [
       {
         "id": "LF-7",
         "title": "Prototype durable task state",
-        "status": "proposed",
+        "status": "done",
         "depends_on": [
-          "LF-5"
+          "LF-15"
         ],
         "acceptance": [
           "Demonstrate parent/child tasks, dependency checks, artifact references, and recovery after closing a pane.",
           "Refine scope from the approved artifact before starting."
         ],
-        "evidence": []
+        "evidence": [
+          "Implemented by b51c434 and hardened by c6f4f8a: recursive task/dependency validation, durable task/run/artifact records, leases and recovery independent of pane lifetime. Seven runner tests and real exact-session continuation documented in docs/PARALLEL-RUNS.md."
+        ]
       },
       {
         "id": "LF-8",
         "title": "Prototype native agent handoff",
-        "status": "proposed",
+        "status": "done",
         "depends_on": [
           "LF-7"
         ],
@@ -145,12 +150,14 @@
           "Demonstrate one explicit task handoff to a native agent CLI in a worktree, with task/run/artifact linkage.",
           "Confirm the chosen agent and execution scope before launching; pane IDs are not task IDs."
         ],
-        "evidence": []
+        "evidence": [
+          "LF-15/17/18 exercised the explicitly approved Two Codex agents slice: separate worktrees, native CLI processes, task/run/conversation identities and committed review artifacts; exact-session continuation succeeded. docs/PARALLEL-RUNS.md."
+        ]
       },
       {
         "id": "LF-9",
         "title": "Try Radicle feedback round-trip",
-        "status": "proposed",
+        "status": "done",
         "depends_on": [
           "LF-7"
         ],
@@ -158,12 +165,15 @@
           "Use a private local review record for an actual factory artifact revision and retrieve its feedback.",
           "Demonstrate the approved feedback mapping without public publication or fabricated stakeholder comments."
         ],
-        "evidence": []
+        "evidence": [
+          "Use the real LF-17 review at 9ce515d, reviewed implementation b51c434, and coordinator dispositions c6f4f8a. Private local Radicle only; no stakeholder approval inferred.",
+          "Private Radicle issue 976c1c9c04101dad8c732fbbf2e1cf1e083dec04; retrieved reply 4b5de553f5bb8624410b91cf7deffb7c6656841f reproduces coordinator disposition exactly. docs/RADICLE-FEEDBACK.md records mapping and commands."
+        ]
       },
       {
         "id": "LF-10",
         "title": "Use the factory to improve itself",
-        "status": "proposed",
+        "status": "done",
         "depends_on": [
           "LF-8",
           "LF-9"
@@ -172,7 +182,27 @@
           "Choose a real follow-up improvement discovered during the prototype and capture it as a child task.",
           "Exercise the approved workflow and record what should change in tools or skills."
         ],
-        "evidence": []
+        "evidence": [
+          "LF-20 is the bounded child improvement discovered while using the factory. Implemented native stream consumption, verified live capture and process cleanup. Learning: prefer adapter events over polling, keep screen-based activity heuristic and separate from task acceptance. Existing workflow skill already supports this feedback-to-child iteration; no skill change needed."
+        ],
+        "children": [
+          {
+            "id": "LF-20",
+            "title": "Use native Zellij updates for live pane tails",
+            "status": "done",
+            "depends_on": [
+              "LF-19"
+            ],
+            "acceptance": [
+              "peek --follow consumes native viewport updates and crops locally to the requested tail.",
+              "Closing the subscriber cleans up its process; pane closure is explicit and silence never means idle."
+            ],
+            "evidence": [
+              "Discovered during the live prototype: peek --follow currently polls dump-screen every second despite native subscription support. Preserve existing CLI and activity semantics.",
+              "peek --follow now uses native subscribe JSON events; local ten-line crop and regex retained. Verified live initial event and CLI SIGINT cleanup with no surviving subscriber. Ten existing unit tests pass. README documents full-viewport transport and closure semantics."
+            ]
+          }
+        ]
       }
     ]
   },
@@ -230,14 +260,17 @@
   {
     "id": "LF-14",
     "title": "Investigate cmux transcript hyperlinks",
-    "status": "proposed",
+    "status": "blocked",
     "depends_on": [],
     "acceptance": [
       "Determine why transcript URLs cannot be opened and verify a fix or document an upstream limitation."
     ],
     "evidence": [
-      "Jeremy reports Cmd+Shift+click also fails. No working fix verified."
-    ]
+      "Jeremy reports Cmd+Shift+click also fails. No working fix verified.",
+      "Selected next eligible task after LF-19; inspect the installed cmux TUI hyperlink path and record supported behavior or a concrete upstream limitation.",
+      "docs/CMUX-HYPERLINKS.md: pinned-source diagnosis; runtime output probe inconclusive, no click fix claimed."
+    ],
+    "blocked_reason": "Installed cmux TUI render model omits hyperlink destinations. Named-link support requires an upstream renderer change; interactive bare-URL opening remains unverified."
   },
   {
     "id": "LF-15",

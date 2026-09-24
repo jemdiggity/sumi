@@ -100,6 +100,27 @@ class Zellij:
     def action(self, *args):
         return command(['zellij', '--session', self.session, 'action', *args])
 
+    def updates(self, pane_id):
+        """Yield native viewport events, owning the subscriber's lifetime."""
+        process = subprocess.Popen(
+            ['zellij', '--session', self.session, 'subscribe',
+             '--pane-id', pane_id, '--format', 'json'],
+            stdout=subprocess.PIPE, text=True)
+        try:
+            for line in process.stdout:
+                yield json.loads(line)
+            if process.wait():
+                raise RuntimeError('Zellij pane subscription failed; see stderr above')
+        finally:
+            process.stdout.close()
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+
     def open(self, run, executable):
         q = lambda s: json.dumps(str(s))
         layout = Path(run['directory']) / 'workspace.kdl'
@@ -395,6 +416,25 @@ def main():
             if args.lines < 1 or args.lines > 200:
                 raise ValueError('--lines must be between 1 and 200')
             try:
+                if args.action == 'peek' and args.follow:
+                    # Zellij sends whole changed viewports; cropping is local.
+                    from contextlib import closing
+                    with closing(Zellij(args.session).updates(args.pane_id)) as updates:
+                        for event in updates:
+                            if event.get('event') == 'pane_closed':
+                                result = dict(pane_id=args.pane_id, activity='unknown',
+                                              source='pane-closed', lines=[])
+                            elif event.get('event') == 'pane_update':
+                                result = pane_activity('\n'.join(event['viewport']),
+                                                       args.lines, args.busy_regex,
+                                                       args.waiting_regex)
+                                result['pane_id'] = args.pane_id
+                            else:
+                                continue
+                            if sys.stdout.isatty():
+                                print('\033[H\033[2J', end='')
+                            print(json.dumps(result), flush=True)
+                    return
                 while True:
                     if args.action == 'peek':
                         text = Zellij(args.session).action('dump-screen', '--pane-id', args.pane_id)

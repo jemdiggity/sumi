@@ -66,8 +66,12 @@ bin/sumi peek terminal_2 --lines 10 --follow
 `tail` and `activity` use the managed Codex event log and run state. A turn start
 means busy, a turn completion means idle, and a recorded process exit means
 finished (not necessarily an accepted task). Quiet output alone never means idle.
-`peek` works on any existing Zellij terminal: it polls the rendered viewport each
-second, trims trailing blank padding, and shows the last ten lines. The default
+`peek` works on any existing Zellij terminal. With `--follow`, it subscribes to
+native Zellij render events: an initial viewport followed by changed viewports.
+It trims trailing blank padding and shows the last ten lines, cropping locally;
+Zellij does not offer a row-region subscription. Redirected output is one JSON
+object per update. Pane closure emits `source: pane-closed` with unknown activity.
+Without `--follow`, it captures a single viewport. The default
 busy regex is `esc to interrupt`, matching Codex's working indicator. Override
 `--busy-regex` or `--waiting-regex` for other terminal tools, including Claude.
 These screen matches are labelled heuristics: scrolled output, hidden indicators,
