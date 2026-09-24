@@ -3,6 +3,7 @@ import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -17,7 +18,7 @@ import uuid
 
 
 LIVE = {'starting', 'running'}
-RESERVED = LIVE | {'preparing', 'prepared'}
+RESERVED = LIVE | {'preparing', 'prepared', 'orphaned'}
 
 
 def now():
@@ -44,6 +45,21 @@ def command(args, cwd=None):
     if result.returncode:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip() or f'Command failed: {args[0]}')
     return result.stdout.strip()
+
+
+@contextmanager
+def lease(path):
+    with path.open('a') as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield stream
+
+
+def leased(path):
+    try:
+        with lease(path):
+            return False
+    except BlockingIOError:
+        return True
 
 
 def task_index(tasks):
@@ -89,7 +105,8 @@ class Zellij:
         layout.write_text('layout {\n pane split_direction="vertical" {\n'
                           f'  pane name="{run["task_id"]} / Codex" size="75%" command={q(sys.executable)} {{\n'
                           f'   args {q(executable)} "--root" {q(run["root"])} "_worker" {q(run["id"])};\n'
-                          '  }\n  pane name="Worktree shell"\n }\n}\n')
+                          '  }\n  pane name="Worktree shell"\n }\n'
+                          ' pane size=1 borderless=true { plugin location="zellij:compact-bar"; }\n}\n')
         return self.action('new-tab', '--no-focus', '--name', run['id'],
                            '--cwd', run['worktree'], '--layout', str(layout))
 
@@ -122,6 +139,10 @@ class Factory:
 
     def records(self):
         return [json.loads(p.read_text()) for p in sorted(self.state.glob('*/run.json'))]
+
+    def worktree_lock(self, run):
+        key = hashlib.sha256(run['worktree'].encode()).hexdigest()[:24]
+        return self.state / ('.worktree-' + key + '.lock')
 
     def save(self, run):
         run['updated_at'] = now()
@@ -170,6 +191,8 @@ class Factory:
                 raise ValueError(f'{task_id} already has a prepared or live run')
             if previous and (previous['state'] in RESERVED or not previous.get('session_id')):
                 raise ValueError('Resume requires a finished run with a captured Codex session ID')
+            if previous and leased(self.worktree_lock(previous)):
+                raise ValueError('Previous worker still owns this worktree')
             run_id = task_id + '-' + uuid.uuid4().hex[:8]
             directory = self.state / run_id
             directory.mkdir()
@@ -234,24 +257,21 @@ class Factory:
     def reconcile(self, run_id):
         with self.lock():
             run = self.read(run_id)
-            if run['state'] in LIVE:
-                with (Path(run['directory']) / 'worker.lock').open('a') as lease:
-                    try:
-                        fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    except BlockingIOError:
-                        pass
-                    else:
-                        age = (datetime.now(timezone.utc) - datetime.fromisoformat(run['started_at'])).total_seconds()
-                        if run['state'] == 'running' or age > 30:
-                            run.update(state='interrupted', error='No worker lease; process exited without a final record')
-                            self.save(run)
+            if run['state'] in LIVE | {'orphaned'}:
+                if not leased(Path(run['directory']) / 'worker.lock'):
+                    age = (datetime.now(timezone.utc) - datetime.fromisoformat(run['started_at'])).total_seconds()
+                    if run['state'] != 'starting' or age > 30:
+                        busy = leased(self.worktree_lock(run))
+                        run.update(state='orphaned' if busy else 'interrupted',
+                                   error='Worker supervisor lost; worktree still busy' if busy else
+                                   'No worker lease; process exited without a final record')
+                        self.save(run)
             self.task_run_state(run)
             return run
 
     def worker(self, run_id):
         run = self.read(run_id)
-        with (Path(run['directory']) / 'worker.lock').open('a') as lease:
-            fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with lease(Path(run['directory']) / 'worker.lock'), lease(self.worktree_lock(run)) as worktree_lease:
             with self.lock():
                 run = self.read(run_id)
                 if run['state'] != 'starting':
@@ -287,7 +307,7 @@ class Factory:
                 with (directory / 'prompt.md').open() as prompt, (directory / 'stderr.log').open('w') as errors, (directory / 'events.jsonl').open('w') as events:
                     proc = subprocess.Popen(args, cwd=run['worktree'], env=env, stdin=prompt,
                                             stdout=subprocess.PIPE, stderr=errors, text=True,
-                                            start_new_session=True)
+                                            start_new_session=True, pass_fds=(worktree_lease.fileno(),))
                     for line in proc.stdout:
                         events.write(line)
                         events.flush()
@@ -343,7 +363,7 @@ def main():
     p = sub.add_parser('prepare', help='Reserve a task and create its worktree')
     p.add_argument('task_id')
     p.add_argument('--agent', choices=['codex'], default='codex')
-    for name in ('start', 'inspect', 'focus', '_worker'):
+    for name in ('start', 'inspect', 'focus', 'cancel', '_worker'):
         p = sub.add_parser(name)
         p.add_argument('run_id')
     sub.add_parser('runs', help='Reconcile and list recorded runs as JSON')
@@ -364,6 +384,13 @@ def main():
             result = factory.start(args.run_id)
         elif args.action == '_worker':
             sys.exit(factory.worker(args.run_id))
+        elif args.action == 'cancel':
+            with factory.lock():
+                result = factory.read(args.run_id)
+                if result['state'] not in ('preparing', 'prepared'):
+                    raise ValueError('Cancel only accepts unstarted preparations; it never kills a live worker')
+                result.update(state='cancelled', finished_at=now())
+                factory.save(result)
         elif args.action == 'resume':
             previous = factory.reconcile(args.run_id)
             result = factory.prepare(previous['task_id'], previous, args.prompt)
@@ -383,7 +410,8 @@ def main():
                     raise ValueError('Workspace missing; files and run record remain. Use resume to prepare another attempt.')
                 Zellij(result['workspace_session']).focus(matching[0]['tab_id'])
             else:
-                result['git_status'] = command(['git', 'status', '--short'], result['worktree'])
+                result['git_status'] = (command(['git', 'status', '--short'], result['worktree'])
+                                        if Path(result['worktree']).exists() else 'Worktree missing')
                 path = Path(result['directory']) / 'result.md'
                 result['result'] = path.read_text() if path.exists() else None
         elif args.action == 'task':

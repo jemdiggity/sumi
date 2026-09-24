@@ -120,6 +120,48 @@ sys.exit(int(os.environ.get('FIXTURE_EXIT','0')))
         self.assertEqual(self.factory.reconcile(run['id'])['state'], 'interrupted')
         self.assertTrue(Path(state['worktree']).exists())
 
+    def test_orphan_keeps_worktree_reserved(self):
+        run = self.factory.prepare('A')
+        with patch.object(Zellij, 'open', return_value='9'):
+            self.factory.start(run['id'])
+        worker = self.process('_worker', run['id'])
+        deadline = time.monotonic() + 5
+        while not self.factory.read(run['id']).get('session_id'):
+            self.assertLess(time.monotonic(), deadline)
+            time.sleep(0.02)
+        worker.kill()
+        worker.communicate(timeout=5)
+        state = self.factory.reconcile(run['id'])
+        self.assertEqual(state['state'], 'orphaned')
+        with self.assertRaisesRegex(ValueError, 'already has'):
+            self.factory.prepare('A', state, 'Retry')
+        while self.factory.reconcile(run['id'])['state'] == 'orphaned':
+            self.assertLess(time.monotonic(), deadline)
+            time.sleep(0.05)
+        self.assertEqual(self.factory.read(run['id'])['state'], 'interrupted')
+
+    def test_cancel_preparation_preserves_files(self):
+        run = self.factory.prepare('A')
+        process = self.process('cancel', run['id'])
+        process.communicate(timeout=5)
+        self.assertEqual(process.returncode, 0)
+        self.assertEqual(self.factory.read(run['id'])['state'], 'cancelled')
+        self.assertTrue(Path(run['worktree']).is_dir())
+        self.assertNotEqual(self.factory.prepare('A')['id'], run['id'])
+
+    def test_startup_without_session_can_be_requeued(self):
+        run = self.factory.prepare('A')
+        with patch.object(Zellij, 'open', return_value='9'):
+            self.factory.start(run['id'])
+        run = self.factory.read(run['id'])
+        run['started_at'] = '2000-01-01T00:00:00+00:00'
+        self.factory.save(run)
+        self.assertEqual(self.factory.reconcile(run['id'])['state'], 'interrupted')
+        process = self.process('task', 'A', '--status', 'ready', '--evidence', 'Retry a launch that never created a Codex session')
+        process.communicate(timeout=5)
+        self.assertEqual(process.returncode, 0)
+        self.assertEqual(self.factory.prepare('A')['state'], 'prepared')
+
 
 if __name__ == '__main__':
     unittest.main()

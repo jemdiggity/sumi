@@ -67,9 +67,20 @@ task, keep the task blocked pending the actual decision and record the concrete
 artifact presented. Scope approval to what the user or stakeholder actually said.
 
 Keep task IDs and existing fields. For a local JSON queue, re-read before writing,
-preserve unrelated changes, and replace the file atomically. Use one coordinator
-as the writer for this prototype. This is not a concurrent task-claim protocol;
-parallel coordinators need actual locking or a transactional task store first.
+preserve unrelated changes, and replace the file atomically. In Sumi, `bin/sumi`
+now provides locked task claims and status writes for explicitly authorized
+parallel Codex runs. Read the project's `docs/PARALLEL-RUNS.md` before using it.
+Prepare eligible tasks, start returned run IDs, and inspect the resulting runs.
+Run IDs, Codex conversation IDs, task IDs, and workspace IDs are distinct.
+
+While Sumi workers are live, use `bin/sumi task` for coordinator outcomes rather
+than directly rewriting tasks.json; direct edits bypass its writer lock. Workers
+must not edit the canonical queue. An exited run leaves the task blocked for
+review, not done. Review its actual worktree changes, result, and validation
+before recording acceptance. Do not merge merely because a worker exited.
+Resume uses the captured conversation ID and same worktree with a new run ID;
+never use a global "last session" when workers run concurrently. Other projects
+without these controls still need one queue writer or a transactional store.
 
 After each meaningful result, reconsider the remaining graph and select the next
 eligible task. Failed validation may require repair work, a design revision, or a

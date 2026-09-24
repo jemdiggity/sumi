@@ -5,8 +5,8 @@ A lean software factory assembled from existing tools and composable agent skill
 Sumi itself is the working mockup: the experiment is how quickly we can set up
 parallel tasks, isolated Git worktrees, workspaces, and a control layer. The UI
 is replaceable; tmux, cmux TUI, and now Zellij are adapters around the same files
-and tools. Parallel worker execution and automatic worktree provisioning are
-not implemented yet. The earlier HTML proposal is one design artifact, not a
+and tools. `bin/sumi` now prepares isolated worktrees and launches parallel Codex
+runs through Zellij. The earlier HTML proposal is one design artifact, not a
 prerequisite for these explicitly requested workspace experiments.
 
 The `skills/` directory versions the factory skill drafts installed under
@@ -18,9 +18,42 @@ To process the queue, ask an agent to use `factory-orchestrator` with `tasks.jso
 For example: "Use factory-orchestrator to work through the design tasks, iterating
 with me on the mockup before implementation." The skill selects eligible work,
 uses the other factory skills, and records progress in the task file. It runs in
-the current agent session; there is no background scheduler or worker pool yet.
+the current agent session; there is no background scheduler. Explicitly launched
+Codex workers run in their own workspaces with recorded lifecycles.
 LF-2 through LF-4 produced the first design artifact. LF-5 now requires stakeholder
 feedback and agreement before the implementation/prototype branch can proceed.
+
+## Parallel Codex workspaces
+
+Prepare an eligible leaf task, then start the returned run ID:
+
+```sh
+bin/sumi prepare LF-17 --agent codex
+bin/sumi start LF-17-<id>
+bin/sumi runs
+bin/sumi inspect LF-17-<id>
+bin/sumi focus LF-17-<id>
+bin/sumi resume LF-17-<id> --prompt "Address this review feedback ..."
+```
+
+Each run opens a separate tab with a Codex execution pane and a shell in its
+own worktree. The main task list reflects active runs. Codex events, conversation
+ID, result, stderr, base commit, branch, and workspace reference are retained in
+`.playground/runs/`. `resume` prepares a new attempt in the same worktree and
+conversation; start its returned ID explicitly. It never uses global `--last`.
+Agent panes display native `codex exec` progress; they are not interactive Codex
+chat prompts. The shell can be used for manual review and editing.
+
+Workers finish into `blocked` awaiting review. Record the reviewed task outcome:
+
+```sh
+bin/sumi task LF-17 --status done --evidence "Reviewed the result and checks ..."
+```
+
+This records acceptance, not a merge. Branches and uncommitted worker changes
+stay separate until explicitly integrated. While workers run, use `bin/sumi`
+for task outcomes; direct JSON edits do not participate in the writer lock.
+See [the run contract](docs/PARALLEL-RUNS.md) for failure and recovery behavior.
 
 ## Zellij comparison
 
@@ -165,8 +198,9 @@ recreated by `bin/playground start`.
 5. Add only the glue this reveals we need: task/run IDs, worktree creation,
    artifact paths, and feedback routing. Keep each backend behind an adapter.
 
-The experiment does not yet include agent orchestration, peer synchronization,
-a custom dashboard, or HTML annotation. No paid agent runs are launched.
+Explicit agent orchestration is available through `bin/sumi`; the playground
+launchers themselves do not start agents. Peer synchronization, automatic
+scheduling, a live custom dashboard, and HTML annotation remain future work.
 
 ## WAN direction
 

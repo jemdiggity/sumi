@@ -41,6 +41,8 @@ bin/sumi task LF-17 --status done --evidence "Reviewed artifact and checks ..."
 - Preparation checks task dependencies (including ancestors), creates a branch
   from a recorded commit, and writes a task prompt from its title and acceptance
   criteria. Uncommitted changes in the coordinator checkout are not inherited.
+  The captured task/prompt is authoritative for the assignment; task metadata
+  can be newer than the code base commit, just as a tracker issue can be.
 - Only one live run may claim a given task. Different eligible tasks may run
   simultaneously. Local state mutations use a shared lock and atomic writes.
 - Starting a run records intent before creating a tab. Repeating a start never
@@ -104,5 +106,37 @@ startup grace) and records interruption. Resumption requires a captured session
 ID; if none exists, return the task to ready and prepare a fresh run. There is
 no background scheduling, automatic retry, merge, cleanup, or migration of a
 running process between muxers.
+
+A worktree-level lease is inherited by the Codex subprocess as well as held by
+the supervisor. A lost supervisor with a still-held worktree lease is marked
+`orphaned` and stays reserved until the process releases it. `cancel RUN` releases
+an unstarted preparation without deleting its branch or files.
+
+## Live exercise and review
+
+Two Codex workers completed concurrently in distinct branches/worktrees:
+`LF-17-47af3c7c` reviewed the runner and `LF-18-30fefb5e` wrote a quickstart.
+Their documents remain unmerged in their worktrees. A follow-up run,
+`LF-18-318f0712`, successfully resumed the exact same Codex conversation in the
+same worktree. Focus switching was verified against the live tabs.
+The coordinator committed the reviewed worker artifacts on their own branches:
+`9ce515d` (review) and `37aa0da` (quickstart). Neither is merged into main.
+
+Review disposition:
+
+- Worktree reuse after supervisor loss: hardened with the inherited worktree
+  lease; a regression test kills the supervisor and verifies the surviving
+  child keeps the worktree reserved until it exits.
+- Startup without a captured session: the existing `task --status ready` then
+  `prepare` recovery path works; now covered by a regression test. `resume`
+  deliberately refuses to guess a conversation ID.
+- Unlocked external edits to tasks.json: outside the supported writer protocol;
+  documented and routed through the locked CLI in the orchestrator skill.
+- Queue metadata newer than the code commit: intentional; clarified the prompt
+  snapshot as authoritative. Code starts from the recorded commit.
+
+The review document contained hypotheses rather than executed reproductions.
+Coordinator checks above distinguish the supported recovery paths from the
+issue that warranted additional protection.
 
 Run `python3 -m unittest discover -s tests -v` for the local, no-model tests.

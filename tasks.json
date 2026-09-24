@@ -242,7 +242,7 @@
   {
     "id": "LF-15",
     "title": "Exercise a task in its own worktree and workspace",
-    "status": "active",
+    "status": "done",
     "depends_on": [
       "LF-13"
     ],
@@ -254,7 +254,8 @@
       "Current request: build mechanics for parallel agent workspaces. Preparing a concrete CLI contract and verifying Zellij launch controls; provider choice pending.",
       "docs/PARALLEL-RUNS.md revision 1: concrete prepare/start/runs/inspect/focus interface and run/worktree lifecycle.",
       ".playground/parallel-proof/evidence.json: two local processes overlapped for six seconds in distinct Git worktrees and Zellij tabs. No agent runs launched; proposed launch CLI not implemented yet.",
-      "Jeremy approved the first parallel-agent slice by selecting Two Codex agents. Scope: one task/worktree/tab per worker, run records, explicit review/merge; docs/PARALLEL-RUNS.md revision 1."
+      "Jeremy approved the first parallel-agent slice by selecting Two Codex agents. Scope: one task/worktree/tab per worker, run records, explicit review/merge; docs/PARALLEL-RUNS.md revision 1.",
+      "Implemented bin/sumi task/worktree/run controls; seven tests passed. Two real Codex workers overlapped in distinct worktrees and tabs; exact-session continuation in the same worktree succeeded. Focus, logs, results, task transitions, and preserved unmerged artifacts verified. See docs/PARALLEL-RUNS.md."
     ],
     "source": "Jeremy: Sumi itself tests rapid setup of parallel tasks, worktrees, workspaces, and control.",
     "template": "engineering-exploration@2"
@@ -280,7 +281,7 @@
   {
     "id": "LF-17",
     "title": "Review parallel runner failure handling",
-    "status": "ready",
+    "status": "done",
     "depends_on": [
       "LF-13"
     ],
@@ -288,13 +289,17 @@
       "Review the implemented bin/sumi and lib/sumi_runner.py for concrete correctness issues in task claiming, concurrent launch, failure recovery, and worktree isolation.",
       "Write findings with file references and reproduction ideas to docs/RUNNER-REVIEW.md in your worktree. Do not change implementation, tasks.json, or other files. If no issues are found, state remaining limitations."
     ],
-    "evidence": [],
-    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment."
+    "evidence": [
+      "Reviewed docs/RUNNER-REVIEW.md in worktree LF-17-47af3c7c. Findings triaged in docs/PARALLEL-RUNS.md; orphan-child protection added and regression-tested. Artifact remains unmerged.",
+      "Review artifact committed by coordinator as 9ce515d on sumi/LF-17-47af3c7c; not merged."
+    ],
+    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment.",
+    "last_run": "LF-17-47af3c7c"
   },
   {
     "id": "LF-18",
     "title": "Write the parallel workspace quickstart",
-    "status": "ready",
+    "status": "done",
     "depends_on": [
       "LF-13"
     ],
@@ -302,7 +307,11 @@
       "Exercise bin/sumi --help and inspect the implementation and docs/PARALLEL-RUNS.md without starting agents or mutating the coordinator.",
       "Write docs/RUNNING-AGENTS.md in your own worktree with actual commands for prepare/start/runs/inspect/focus/resume, task review, and known limits. Do not change implementation, tasks.json, or other files."
     ],
-    "evidence": [],
-    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment."
+    "evidence": [
+      "Reviewed docs/RUNNING-AGENTS.md in worktree LF-18-30fefb5e. Quickstart matches implemented controls; continuation LF-18-318f0712 clarified exec-mode and explicit start after resume. Artifact remains unmerged; latest orphan/cancel additions are documented in the canonical run contract.",
+      "Quickstart artifact committed by coordinator as 37aa0da on sumi/LF-18-30fefb5e; not merged."
+    ],
+    "source": "Bounded first Codex worker tasks selected for the approved parallel workspace experiment.",
+    "last_run": "LF-18-318f0712"
   }
 ]
