@@ -20,7 +20,16 @@ def atomic(path, data):
     os.replace(tmp, path)
 
 
-class Pool:
+import importlib.util
+
+_thread_spec = importlib.util.spec_from_file_location(
+    "sumi_review_threads", HERE / "review_threads.py"
+)
+_thread_module = importlib.util.module_from_spec(_thread_spec)
+_thread_spec.loader.exec_module(_thread_module)
+
+
+class Pool(_thread_module.ReviewThreads):
     validator = HERE / "validate.mjs"
     page_instructions = "Preserve character browsing and window.BebopScene get/set unless explicitly changing those interactions."
     initial_title = "Initial Cowboy Bebop explorer"
@@ -51,6 +60,7 @@ class Pool:
             "CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT); CREATE TABLE IF NOT EXISTS revisions(id TEXT PRIMARY KEY,html TEXT NOT NULL,created TEXT); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,dedupe TEXT UNIQUE,revision TEXT,payload TEXT,status TEXT,created TEXT,result TEXT);"
         )
         self.db.commit()
+        self.init_threads()
         token = self.root / "token"
         self.token = token.read_text() if token.exists() else secrets.token_urlsafe(32)
         if not token.exists():
@@ -182,6 +192,7 @@ class Pool:
             if old:
                 return old[0]
             job = uuid.uuid4().hex[:12]
+            payload = self.attach_thread(job, dict(payload))
             self.db.execute(
                 "INSERT INTO jobs VALUES (?,?,?,?,?,?,?)",
                 (job, dedupe, rev, json.dumps(payload), "queued", stamp(), "{}"),
@@ -226,6 +237,7 @@ class Pool:
                 busy=len(self.active),
                 queued=sum(j["status"] == "queued" for j in jobs),
                 jobs=jobs,
+                threads=self.threads(),
             )
 
     def model(self, ws, prompt, job, phase):
@@ -437,6 +449,10 @@ class Pool:
         job = row["id"]
         start = time.monotonic()
         payload = json.loads(row["payload"])
+        if payload.get("review_thread"):
+            payload["review_thread"]["messages"] = self.prior_thread_messages(
+                payload["thread_id"], job
+            )
         ws = self.root / "workspaces" / job
         ws.parent.mkdir(exist_ok=True)
         try:
@@ -588,10 +604,7 @@ class Pool:
             with self.lock:
                 if self.getmeta("paused") == "true":
                     continue
-                rows = self.db.execute(
-                    "SELECT * FROM jobs WHERE status='queued' ORDER BY created LIMIT ?",
-                    (max(0, self.workers - len(self.active)),),
-                ).fetchall()
+                rows = self.eligible_jobs()
                 for row in rows:
                     self.active.add(row["id"])
                     self.update(row["id"], "working")
@@ -670,6 +683,8 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(length))
             if self.path == "/api/comments":
                 return self.respond(202, {"id": p.submit(data)})
+            if self.path == "/api/review-thread":
+                return self.respond(200, p.thread_action(data))
             if self.path == "/api/pause":
                 if not isinstance(data.get("paused"), bool):
                     raise ValueError("paused must be boolean")

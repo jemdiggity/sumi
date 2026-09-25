@@ -134,3 +134,35 @@ SUMI_PLAYWRIGHT=/path/to/playwright/index.mjs node experiments/live-review/test-
 
 The test requires the local preview server and an installed Playwright Chromium.
 Transition reference: [Chrome cross-document view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/cross-document).
+
+## Persistent review threads
+
+Feedback survives page refreshes and published revisions. Numbered pins project an
+original annotation onto the current page only when its selector is unambiguous
+and its recorded scene matches. Pins are amber while work is queued/running, blue
+when a proposal is ready, green only after reviewer acceptance, and red when work
+needs attention. Missing or ambiguous anchors stay in the thread list with an
+**Original location** link; original revisions and coordinates are never rewritten.
+
+Click a pin or expand its thread in the pool panel. **Reply & send** creates a new
+immutable job in the same thread, with prior reviewer/agent messages and the
+currently viewed revision. Other threads run in parallel, but a thread's own jobs
+run sequentially. Context is refreshed when a follow-up starts. Replying reopens
+accepted work. **Accept** records reviewer acceptance; **Reopen** marks it for
+further review without dispatching until a reply is sent. Replies and drafts are
+retained through delivery retries and refreshes. No agent can accept its own work.
+
+SQLite tables `review_threads` and `review_actions` add durable lifecycle state;
+existing jobs migrate into threads without deleting snapshots or prior replies.
+`POST /api/review-thread` accepts reply/accept/reopen actions behind the same local
+token and origin checks. Reply request IDs make retries idempotent.
+
+Test the actual bundle's refresh, colors, replies, draft guards, and missing-anchor
+behavior without dispatching real workers:
+
+```sh
+node experiments/live-review/test-review-threads.mjs /path/to/built/review.js
+```
+
+The browser test uses the repository's local Playwright installation. After a
+bundle upgrade, refresh existing tabs once to load these controls.

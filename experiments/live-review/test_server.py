@@ -60,6 +60,62 @@ class QueueTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.pool.submit(self.payload("  "))
 
+    def test_thread_persists_status_reply_history_and_retry(self):
+        ident = self.pool.submit(self.payload())
+        self.pool.update(
+            ident,
+            "published",
+            reply="Made it quieter",
+            published=self.pool.getmeta("current"),
+        )
+        self.assertEqual(self.pool.threads()[0]["status"], "ready")
+        self.pool.thread_action({"thread_id": ident, "action": "accept"})
+        self.assertEqual(self.pool.threads()[0]["status"], "accepted")
+        reply = {
+            "thread_id": ident,
+            "action": "reply",
+            "message": "Still too loud",
+            "request_id": "request-1",
+            "revision": self.pool.getmeta("current"),
+        }
+        job = self.pool.thread_action(reply)["id"]
+        self.assertEqual(job, self.pool.thread_action(reply)["id"])
+        thread = self.pool.threads()[0]
+        self.assertEqual(thread["status"], "working")
+        self.assertEqual(thread["revision"], self.pool.getmeta("current"))
+        self.assertIn("Still too loud", [m["text"] for m in thread["messages"]])
+        with self.assertRaises(ValueError):
+            self.pool.thread_action({"thread_id": ident, "action": "accept"})
+        self.pool.update(
+            job, "published", reply="Corrected", published=self.pool.getmeta("current")
+        )
+        self.pool.close()
+        self.pool.db.close()
+        self.pool = mod.Pool(*self.args)
+        self.assertEqual(len(self.pool.threads()), 1)
+        self.assertEqual(self.pool.threads()[0]["status"], "ready")
+        self.assertEqual(
+            self.pool.prior_thread_messages(ident, job)[-1]["text"], "Made it quieter"
+        )
+
+    def test_replies_serialize_within_thread_but_other_threads_can_run(self):
+        ident = self.pool.submit(self.payload())
+        self.pool.thread_action(
+            {
+                "thread_id": ident,
+                "action": "reply",
+                "message": "Follow up",
+                "request_id": "next",
+                "revision": self.pool.getmeta("current"),
+            }
+        )
+        other = self.payload("Other element")
+        other["annotation"]["id"] = "other"
+        other_id = self.pool.submit(other)
+        self.assertEqual(
+            [r["id"] for r in self.pool.eligible_jobs()], [ident, other_id]
+        )
+
     def test_clean_candidate_is_published(self):
         initial = self.pool.getmeta("current")
         job = self.pool.submit(self.payload())

@@ -602,5 +602,24 @@
       "Published repair 9fd605298277a01685a164484ed0249d97fe07eb with per-response output/usage/summaries, disclosure state, real model/effort selection, correct Agentation Escape, and TUI contrast. Original replies/publications preserved in audit fields; no reviewer acceptance inferred.",
       "Browser publication gate rejects audited prior revision and passes repair. Real Luna browser smoke (response, resume, command output, usage, reload, Stop) and real toolbar Escape checks pass. Five backend tests and nine pool regressions pass. Chat service running with UI queue resumed."
     ]
+  },
+  {
+    "id": "LF-36",
+    "title": "Keep UI review comments persistent with statuses and reply threads",
+    "status": "done",
+    "depends_on": [
+      "LF-35"
+    ],
+    "acceptance": [
+      "Retain comments across revisions with colored pins and durable threads.",
+      "Allow accept/reopen and follow-up replies dispatched with history.",
+      "Protect drafts and serialize replies within a thread while other threads run in parallel."
+    ],
+    "evidence": [
+      "Persistent SQLite threads/actions backfill existing jobs without discarding original revisions or annotations. 27 Bebop and 16 chat threads restored at migration; both services restarted while idle with database backups.",
+      "Numbered colored pins link unambiguous current elements; original-location fallback, durable threaded replies, reviewer accept/reopen, persistent drafts/open state, and automatic-reload deferral. Replies run sequentially per thread while independent threads retain pool concurrency.",
+      "Eleven pool tests pass, including reply idempotency, history, restart, acceptance, and scheduling. Browser bundle test passes refresh/revision continuity, blue/green colors, acceptance/reopen, active annotation mode controls, reply delivery, draft retention, and missing-anchor fallback.",
+      "Native follow-up e8b3cdd584eb on coordinator canary thread cf9d94ec8fd3 received history and correctly recalled LAB / 01 \u2192 CHAT / 01 without editing. Worker returned already_satisfied, conservatively displayed needs attention; no reviewer acceptance fabricated. Live migrated thread inspected visually."
+    ]
   }
 ]
