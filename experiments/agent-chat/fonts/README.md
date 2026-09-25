@@ -1,0 +1,1 @@
+JetBrains Mono regular and bold webfonts, unmodified, obtained 2026-09-25 from https://github.com/JetBrains/JetBrainsMono/tree/master/fonts/webfonts. License: OFL.txt. Served locally; no browser requests to a font CDN.

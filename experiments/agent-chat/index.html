@@ -616,6 +616,108 @@
       .notice {
         font-family: var(--chat-font);
       }
+
+      @font-face {
+        font-family: "Sumi Terminal";
+        src: url("/assets/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Sumi Terminal";
+        src: url("/assets/fonts/JetBrainsMono-Bold.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      body[data-skin="tui"] {
+        --paper: #282c34;
+        --panel: #282c34;
+        --ink: #ffffff;
+        --muted: #a0a0a0;
+        --line: #50545c;
+        --accent: #81a2be;
+        --green: #b5bd68;
+        --chat-font: "Sumi Terminal", monospace;
+        font-family: var(--chat-font);
+        font-size: 13pt;
+        line-height: 1.4;
+      }
+      body[data-skin="tui"] * {
+        font-family: var(--chat-font);
+      }
+      body[data-skin="tui"] .message .body,
+      body[data-skin="tui"] #prompt {
+        font-size: 13pt;
+        line-height: 1.4;
+      }
+      body[data-skin="tui"] .message,
+      body[data-skin="tui"] .composer,
+      body[data-skin="tui"] button,
+      body[data-skin="tui"] select,
+      body[data-skin="tui"] .runtime,
+      body[data-skin="tui"] .conversation {
+        border-radius: 0;
+        box-shadow: none;
+      }
+      body[data-skin="tui"] .message.user {
+        background: transparent;
+        border-left: 2px solid #666666;
+        padding: 4px 14px;
+        margin-left: 0;
+      }
+      body[data-skin="tui"] .message.user .speaker {
+        color: #a0a0a0;
+      }
+      body[data-skin="tui"] .message.user .body::before {
+        content: "> ";
+        color: #a0a0a0;
+      }
+      body[data-skin="tui"] .conversation.selected {
+        background: #353a44;
+        color: #fff;
+      }
+      body[data-skin="tui"] .new,
+      body[data-skin="tui"] .icon-button,
+      body[data-skin="tui"] .suggestion,
+      body[data-skin="tui"] .composer {
+        background: transparent;
+        color: #fff;
+        border-color: #666666;
+      }
+      body[data-skin="tui"] #send {
+        background: #c5c8c6;
+        color: #282c34;
+      }
+      body[data-skin="tui"] #stop {
+        background: transparent;
+        color: #cc6666;
+        border-color: #cc6666;
+      }
+      body[data-skin="tui"] .message pre {
+        background: #22252c;
+        color: #c5c8c6;
+      }
+      body[data-skin="tui"] .composer:focus-within {
+        border-color: #c5c8c6;
+      }
+      body[data-skin="tui"] textarea {
+        caret-color: #ffffff;
+      }
+      body[data-skin="tui"] .brand,
+      body[data-skin="tui"] .welcome h2 {
+        letter-spacing: 0;
+      }
+      body[data-skin="tui"] .welcome h2 {
+        font-size: 26px;
+        line-height: 1.4;
+        font-weight: 700;
+      }
+      body[data-skin="tui"] ::selection {
+        background: #c5c8c6;
+        color: #282c34;
+      }
     </style>
   </head>
   <body class="inspector-hidden">

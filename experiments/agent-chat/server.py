@@ -331,6 +331,16 @@ class Chats:
 class Handler(review.Handler):
     def do_GET(self):
         path = urlparse(self.path).path
+        fonts = {
+            "/assets/fonts/JetBrainsMono-Regular.woff2",
+            "/assets/fonts/JetBrainsMono-Bold.woff2",
+        }
+        if path in fonts:
+            return self.respond(
+                200,
+                (HERE / "fonts" / path.rsplit("/", 1)[1]).read_bytes(),
+                "font/woff2",
+            )
         if path == "/chat/state":
             return self.respond(200, self.server.chats.state())
         if path == "/chat/events":
