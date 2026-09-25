@@ -1,0 +1,410 @@
+[
+  {
+    "slots": 3,
+    "batch_seconds": 102.197,
+    "first_worker_seconds": 26.35,
+    "first_passing_candidate_seconds": 26.35,
+    "passing_candidates": 6,
+    "usage": {
+      "input_tokens": 725026,
+      "cached_input_tokens": 604928,
+      "output_tokens": 9223,
+      "reasoning_output_tokens": 1576
+    },
+    "initial_conflicts": "index.html    6-sided conflict",
+    "checks": [
+      {
+        "fixture": "F1",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F1",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 40.729
+      },
+      {
+        "fixture": "F2",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F2",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 26.35
+      },
+      {
+        "fixture": "F3",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F3",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 53.109
+      },
+      {
+        "fixture": "F4",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F4",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 74.145
+      },
+      {
+        "fixture": "F5",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F5",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 102.197
+      },
+      {
+        "fixture": "F6",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F6",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 73.293
+      }
+    ],
+    "integration": {
+      "commit": "2605f05d45c85d3047dec141078cced9df3bb277",
+      "checks": [
+        {
+          "name": "core",
+          "pass": true
+        },
+        {
+          "name": "F1",
+          "pass": true
+        },
+        {
+          "name": "F2",
+          "pass": true
+        },
+        {
+          "name": "F3",
+          "pass": true
+        },
+        {
+          "name": "F4",
+          "pass": true
+        },
+        {
+          "name": "F5",
+          "pass": true
+        },
+        {
+          "name": "F6",
+          "pass": true
+        }
+      ],
+      "initial_conflict_regions": 2,
+      "resolved_by": "Coordinator, manually; not an autonomous integration benchmark",
+      "verification": "DOM behavior only; native Chrome automation failed to start twice. Visual acceptance pending."
+    }
+  },
+  {
+    "slots": 1,
+    "batch_seconds": 196.416,
+    "first_worker_seconds": 38.52,
+    "first_passing_candidate_seconds": 38.52,
+    "passing_candidates": 6,
+    "usage": {
+      "input_tokens": 573692,
+      "cached_input_tokens": 484608,
+      "output_tokens": 8482,
+      "reasoning_output_tokens": 1502
+    },
+    "initial_conflicts": "index.html    6-sided conflict",
+    "checks": [
+      {
+        "fixture": "F1",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F1",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 38.52
+      },
+      {
+        "fixture": "F2",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F2",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 69.521
+      },
+      {
+        "fixture": "F3",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F3",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 95.905
+      },
+      {
+        "fixture": "F4",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F4",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 131.647
+      },
+      {
+        "fixture": "F5",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F5",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 173.247
+      },
+      {
+        "fixture": "F6",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F6",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 196.415
+      }
+    ],
+    "integration": {
+      "commit": "882a80a206c0a6a80e28f24e1f2eb7639cc87f89",
+      "checks": [
+        {
+          "name": "core",
+          "pass": true
+        },
+        {
+          "name": "F1",
+          "pass": true
+        },
+        {
+          "name": "F2",
+          "pass": true
+        },
+        {
+          "name": "F3",
+          "pass": true
+        },
+        {
+          "name": "F4",
+          "pass": true
+        },
+        {
+          "name": "F5",
+          "pass": true
+        },
+        {
+          "name": "F6",
+          "pass": true
+        }
+      ],
+      "initial_conflict_regions": 4,
+      "resolved_by": "Coordinator, manually; not an autonomous integration benchmark",
+      "verification": "DOM behavior only; native Chrome automation failed to start twice. Visual acceptance pending."
+    }
+  },
+  {
+    "slots": 6,
+    "batch_seconds": 51.207,
+    "first_worker_seconds": 22.703,
+    "first_passing_candidate_seconds": 22.703,
+    "passing_candidates": 6,
+    "usage": {
+      "input_tokens": 582194,
+      "cached_input_tokens": 489728,
+      "output_tokens": 8301,
+      "reasoning_output_tokens": 1817
+    },
+    "initial_conflicts": "index.html    6-sided conflict",
+    "checks": [
+      {
+        "fixture": "F1",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F1",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 35.059
+      },
+      {
+        "fixture": "F2",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F2",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 26.787
+      },
+      {
+        "fixture": "F3",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F3",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 28.251
+      },
+      {
+        "fixture": "F4",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F4",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 43.904
+      },
+      {
+        "fixture": "F5",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F5",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 51.206
+      },
+      {
+        "fixture": "F6",
+        "checks": [
+          {
+            "name": "core",
+            "pass": true
+          },
+          {
+            "name": "F6",
+            "pass": true
+          }
+        ],
+        "completed_at_seconds": 22.703
+      }
+    ],
+    "integration": {
+      "commit": "298e2c933fe3f3c38831ec3613ec743730cc5070",
+      "checks": [
+        {
+          "name": "core",
+          "pass": true
+        },
+        {
+          "name": "F1",
+          "pass": true
+        },
+        {
+          "name": "F2",
+          "pass": true
+        },
+        {
+          "name": "F3",
+          "pass": true
+        },
+        {
+          "name": "F4",
+          "pass": true
+        },
+        {
+          "name": "F5",
+          "pass": true
+        },
+        {
+          "name": "F6",
+          "pass": true
+        }
+      ],
+      "initial_conflict_regions": 2,
+      "resolved_by": "Coordinator, manually; not an autonomous integration benchmark",
+      "verification": "DOM behavior only; native Chrome automation failed to start twice. Visual acceptance pending."
+    }
+  }
+]

@@ -469,13 +469,32 @@
   {
     "id": "LF-28",
     "title": "Design Agentation review lifecycle for the model comparison",
-    "status": "active",
+    "status": "blocked",
     "depends_on": [
       "LF-27"
     ],
     "acceptance": [
       "Freeze revised shared baseline and obtain fresh Astra technical design preserving seven reviewer decisions."
     ],
-    "evidence": []
+    "evidence": [
+      "Native Astra design exited successfully in 226.92s; .playground/external-runs/bridge-v2-design/result.md. Not yet reviewed or frozen as implementation handoff."
+    ],
+    "blocked_reason": "Design run completed; coordinator review remains. Current user priority is parallel UI-feedback pilot."
+  },
+  {
+    "id": "LF-29",
+    "title": "Test a JJ workspace pool for parallel UI feedback",
+    "status": "done",
+    "depends_on": [],
+    "acceptance": [
+      "Run the same six labelled feedback fixtures with 1, 3, and 6 Luna workers in disposable isolated JJ workspaces.",
+      "Record completion timing, usage, integration conflicts, and verification without claiming statistical proof.",
+      "Serve a combined preview and preserve original mockup and review comments."
+    ],
+    "evidence": [
+      "experiments/feedback-pool/RESULTS.md and results-20260925.json: 18 native gpt-6-luna sessions, six fixed comments, concurrency 1/3/6; batch times 196.416/102.197/51.207 seconds. All models verified from persisted turn_context.",
+      "JJ 0.45.1 installed; isolated disposable workspaces under /Users/jeremyhale/work/sumi-pool-20260925. All 18 candidate checks passed; each combined result passed core + six DOM checks after coordinator conflict resolution (4/2/2 regions).",
+      "Local dashboard http://127.0.0.1:8769/ serves combined previews. No live annotation dispatch or warm-session reuse yet; timing excludes manual integration and native visual review remains pending. Original prototype and comments unchanged."
+    ]
   }
 ]
