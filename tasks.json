@@ -496,5 +496,24 @@
       "JJ 0.45.1 installed; isolated disposable workspaces under /Users/jeremyhale/work/sumi-pool-20260925. All 18 candidate checks passed; each combined result passed core + six DOM checks after coordinator conflict resolution (4/2/2 regions).",
       "Local dashboard http://127.0.0.1:8769/ serves combined previews. No live annotation dispatch or warm-session reuse yet; timing excludes manual integration and native visual review remains pending. Original prototype and comments unchanged."
     ]
+  },
+  {
+    "id": "LF-30",
+    "title": "Live Cowboy Bebop review with automatic Luna pool",
+    "status": "done",
+    "depends_on": [
+      "LF-29"
+    ],
+    "acceptance": [
+      "Serve an interactive character explorer with Agentation annotations.",
+      "Automatically persist and dispatch comments to six isolated Luna/JJ workspaces, with visible progress.",
+      "Combine successful changes into versioned previews; reconcile conflicts and preserve last passing preview on failure.",
+      "Verify real annotation payload to native Luna to published revision; preserve original review artifacts."
+    ],
+    "evidence": [
+      "experiments/live-review/: interactive Cowboy Bebop explorer and Agentation callback toolbar, durable automatic queue, six native Luna slots, isolated JJ job workspaces and serialized combined publication.",
+      "Six backend tests pass, including idempotency, restart state, successful publication, invalid candidate preservation, and conflict reconciliation. Two real HTTP annotation payloads published via native Luna in 9.99s and 24.05s; both changes verified in combined HTML.",
+      "Running locally at http://127.0.0.1:8770/. Original revisions and failed test attempts preserved. Native Chrome control unavailable; actual toolbar click flow and visual layout still need user exercise. Only this pilot automatically dispatches comments."
+    ]
   }
 ]
