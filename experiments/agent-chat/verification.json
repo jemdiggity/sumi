@@ -1,0 +1,47 @@
+{
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "cli": "0.156.1",
+  "chat_checks": [
+    "real reply",
+    "thread resume and recall",
+    "workspace command execution",
+    "usage",
+    "reload preserves draft and history",
+    "stop"
+  ],
+  "conversations": [
+    {
+      "id": "fcd8efbe0af3",
+      "thread": "01a0da02-63f3-74e2-96e8-24886699569f",
+      "turns": 3,
+      "usage": [
+        {
+          "input_tokens": 15768,
+          "cached_input_tokens": 11008,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0
+        },
+        {
+          "input_tokens": 47505,
+          "cached_input_tokens": 41216,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 117,
+          "reasoning_output_tokens": 0
+        }
+      ]
+    }
+  ],
+  "ui_review": {
+    "id": "cf9d94ec8fd3",
+    "status": "published",
+    "elapsed_seconds": 13.84,
+    "revision": "3bfac7827d448a9e5b7deebfbf360f66d76804e3"
+  },
+  "regressions": {
+    "chat_store": 4,
+    "review_pool": 9,
+    "live_reload": 3
+  }
+}

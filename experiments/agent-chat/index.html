@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sumi — a little room to think</title>
+    <style>
+      :root {
+        --paper: #f7f6f2;
+        --panel: #efeee8;
+        --ink: #272a28;
+        --muted: #757971;
+        --line: #ddded5;
+        --accent: #b74e31;
+        --green: #49745a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font:
+          14px/1.55 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 238px minmax(350px, 1fr) 280px;
+        height: 100dvh;
+      }
+      .sidebar {
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+        padding: 30px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        min-height: 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 23px;
+        font-weight: 650;
+        letter-spacing: -1px;
+      }
+      .mark {
+        color: var(--accent);
+        font-size: 28px;
+        transform: rotate(-14deg);
+      }
+      .tag {
+        font:
+          10px/1.5 ui-monospace,
+          monospace;
+        text-transform: uppercase;
+        letter-spacing: 1.4px;
+        color: var(--muted);
+      }
+      .brand small {
+        font:
+          10px ui-monospace,
+          monospace;
+        color: var(--muted);
+        letter-spacing: 0;
+        margin-left: auto;
+      }
+      .new {
+        background: var(--paper);
+        border: 1px solid #cecec4;
+        border-radius: 9px;
+        padding: 10px 12px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+      }
+      .conversations {
+        flex: 1;
+        overflow: auto;
+      }
+      .conversation {
+        width: 100%;
+        border: 0;
+        text-align: left;
+        background: transparent;
+        padding: 12px 10px;
+        border-radius: 8px;
+        margin-top: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--muted);
+      }
+      .conversation.selected {
+        color: var(--ink);
+        background: #e2e4d9;
+      }
+      .side-note {
+        color: var(--muted);
+        font-size: 12px;
+        max-width: 175px;
+        padding-bottom: 120px;
+      }
+      .main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+      }
+      header {
+        height: 86px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 36px;
+        border-bottom: 1px solid var(--line);
+        gap: 12px;
+      }
+      header h1 {
+        font-size: 14px;
+        font-weight: 550;
+        margin: 0;
+      }
+      .connection {
+        color: var(--green);
+        font:
+          11px ui-monospace,
+          monospace;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        display: inline-block;
+      }
+      .icon-button {
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 6px 10px;
+        color: var(--muted);
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      #transcript {
+        flex: 1;
+        overflow: auto;
+        padding: 30px max(28px, calc((100% - 720px) / 2));
+        scroll-behavior: smooth;
+      }
+      .welcome {
+        max-width: 650px;
+        margin: 7vh auto 20px;
+      }
+      .eyebrow {
+        color: var(--accent);
+        font:
+          11px ui-monospace,
+          monospace;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .welcome h2 {
+        font:
+          normal clamp(34px, 3.4vw, 52px) / 1.12 Georgia,
+          serif;
+        letter-spacing: -1.6px;
+        margin: 20px 0;
+      }
+      .welcome p {
+        color: var(--muted);
+        max-width: 430px;
+        font-size: 15px;
+      }
+      .suggestions {
+        margin-top: 36px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .suggestion {
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 17px;
+        text-align: left;
+        color: var(--ink);
+        transition: background 0.15s;
+      }
+      .suggestion:hover {
+        background: var(--panel);
+      }
+      .suggestion span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .message {
+        margin: 20px 0 30px;
+        max-width: 720px;
+      }
+      .message.user {
+        background: #ebece4;
+        border-radius: 13px;
+        padding: 16px 20px;
+        margin-left: 32px;
+      }
+      .speaker {
+        font:
+          10px ui-monospace,
+          monospace;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .message.agent .speaker {
+        color: var(--accent);
+      }
+      .message .body {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 15px;
+        line-height: 1.75;
+      }
+      .message pre {
+        background: #edece6;
+        padding: 16px;
+        border-radius: 8px;
+        overflow: auto;
+        font:
+          12px/1.65 ui-monospace,
+          monospace;
+        white-space: pre;
+      }
+      .notice {
+        color: var(--muted);
+        font:
+          11px ui-monospace,
+          monospace;
+        margin: 18px 0;
+      }
+      .error {
+        color: #a53d2b;
+      }
+      .composer-wrap {
+        padding: 15px 32px 25px;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .composer {
+        background: #fffefa;
+        border: 1px solid #d2d3c7;
+        border-radius: 15px;
+        padding: 14px 16px 12px;
+        box-shadow: 0 6px 24px #252e1910;
+      }
+      .composer:focus-within {
+        border-color: #929d84;
+      }
+      textarea {
+        width: 100%;
+        resize: vertical;
+        min-height: 62px;
+        max-height: 180px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        outline: none;
+        line-height: 1.6;
+      }
+      textarea::placeholder {
+        color: #9b9d92;
+      }
+      .composer-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .model {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font:
+          11px ui-monospace,
+          monospace;
+        color: var(--muted);
+      }
+      #send {
+        background: var(--ink);
+        color: var(--paper);
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 14px;
+      }
+      #stop {
+        background: #f5e8e2;
+        border: 1px solid #dab4a5;
+        color: #933e29;
+        border-radius: 8px;
+        padding: 8px 14px;
+      }
+      .composer-caption {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 9px;
+      }
+      .inspector {
+        border-left: 1px solid var(--line);
+        padding: 32px 23px;
+        overflow: auto;
+      }
+      .inspector h2 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 30px;
+      }
+      .runtime {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 15px;
+        margin: 18px 0 26px;
+      }
+      .runtime strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin: 7px 0;
+      }
+      .runtime p {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 5px 0;
+      }
+      .metric {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+        font:
+          11px ui-monospace,
+          monospace;
+        color: var(--muted);
+      }
+      .activity {
+        font-size: 11px;
+        border-left: 1px solid var(--line);
+        padding: 0 0 14px 12px;
+        margin-left: 3px;
+        overflow-wrap: anywhere;
+      }
+      .activity strong {
+        font-weight: 500;
+      }
+      .activity p {
+        color: var(--muted);
+        white-space: pre-wrap;
+        margin: 4px 0;
+        max-height: 160px;
+        overflow: auto;
+      }
+      details.raw {
+        margin-top: 24px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      #raw {
+        max-height: 320px;
+        overflow: auto;
+        font:
+          10px/1.5 ui-monospace,
+          monospace;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .inspector-hidden .app {
+        grid-template-columns: 238px minmax(350px, 1fr);
+      }
+      .inspector-hidden .inspector {
+        display: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 1100px) {
+        .app {
+          grid-template-columns: 195px minmax(350px, 1fr);
+        }
+        .inspector {
+          display: none;
+        }
+        .inspector-open .inspector {
+          display: block;
+          position: fixed;
+          right: 0;
+          top: 86px;
+          bottom: 0;
+          width: 280px;
+          background: var(--paper);
+          box-shadow: -12px 0 30px #0001;
+          z-index: 20;
+        }
+        .inspector-hidden .app {
+          grid-template-columns: 195px minmax(350px, 1fr);
+        }
+      }
+      @media (max-width: 650px) {
+        .app,
+        .inspector-hidden .app {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          display: none;
+        }
+        header {
+          padding: 0 20px;
+          height: 72px;
+        }
+        #transcript {
+          padding: 24px;
+        }
+        .composer-wrap {
+          padding: 10px 18px 22px;
+        }
+        .welcome {
+          margin-top: 3vh;
+        }
+        .suggestions {
+          grid-template-columns: 1fr;
+        }
+        .connection {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #transcript {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="sidebar" aria-label="Conversations">
+        <div class="brand">
+          <span class="mark">✳</span> sumi <small>CHAT / 01</small>
+        </div>
+        <button class="new" id="new">New conversation <span>＋</span></button>
+        <div class="conversations">
+          <div class="tag">Your conversations</div>
+          <div id="conversations"></div>
+        </div>
+        <div class="side-note">
+          A little room to think.<br />One agent, a shared thread,<br />and the
+          work in between.
+        </div>
+      </nav>
+      <main class="main">
+        <header>
+          <div>
+            <div class="tag">Workspace / Chat study</div>
+            <h1 id="title">A fresh conversation</h1>
+          </div>
+          <div class="header-actions">
+            <div class="connection">
+              <i class="dot"></i><span id="connection">Connecting</span>
+            </div>
+            <button
+              class="icon-button"
+              id="inspect"
+              aria-label="Toggle activity inspector"
+            >
+              Activity ↗</button
+            ><button
+              class="icon-button"
+              id="new-mobile"
+              aria-label="New conversation"
+            >
+              ＋
+            </button>
+          </div>
+        </header>
+        <section id="transcript" aria-label="Conversation" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <div class="eyebrow">A conversation with possibility</div>
+            <h2>What are we<br />working on today?</h2>
+            <p>
+              Bring a rough idea, a stubborn problem, or just a question. We’ll
+              find a place to start.
+            </p>
+            <div class="suggestions">
+              <button
+                class="suggestion"
+                data-prompt="Help me sketch a small, useful feature for an agent chat interface. Start with three distinct ideas."
+              >
+                Shape an idea
+                <span>Turn a loose thought into a next step ↗</span></button
+              ><button
+                class="suggestion"
+                data-prompt="Create a tiny hello.py in your workspace and run it, so I can see tool activity in this chat."
+              >
+                Make something small
+                <span>Watch the agent use its workspace ↗</span>
+              </button>
+            </div>
+          </div>
+          <div id="messages"></div>
+          <div class="notice" id="working" hidden>◌ Agent is working…</div>
+        </section>
+        <div class="composer-wrap">
+          <div id="error" class="notice error" role="alert" hidden></div>
+          <form class="composer" id="composer">
+            <textarea
+              id="prompt"
+              aria-label="Message the agent"
+              placeholder="Ask, explore, or make something…"
+              maxlength="16000"
+            ></textarea>
+            <div class="composer-bottom">
+              <div class="model">
+                <i class="dot" style="color: var(--green)"></i> Luna
+                <span>· low effort</span>
+              </div>
+              <div>
+                <button type="button" id="stop" hidden>■ Stop</button
+                ><button id="send" type="submit">Send ↑</button>
+              </div>
+            </div>
+          </form>
+          <div class="composer-caption">
+            <span>Enter to send · Shift + Enter for a new line</span
+            ><span>Live Codex · local workspace</span>
+          </div>
+        </div>
+      </main>
+      <aside class="inspector" aria-label="Agent activity">
+        <h2>Inside the conversation</h2>
+        <div class="tag">Agent</div>
+        <div class="runtime">
+          <div class="connection">
+            <i class="dot"></i><span id="status">Ready</span>
+          </div>
+          <strong>GPT-6 Luna</strong>
+          <p>Native Codex · JSON event stream</p>
+          <p>Low reasoning · dedicated workspace</p>
+        </div>
+        <div class="tag">This turn</div>
+        <div class="metric">
+          <span>Elapsed</span><span id="elapsed">—</span>
+        </div>
+        <div class="metric">
+          <span>Input tokens</span><span id="tokens-in">—</span>
+        </div>
+        <div class="metric">
+          <span>Cached input</span><span id="tokens-cached">—</span>
+        </div>
+        <div class="metric">
+          <span>Output tokens</span><span id="tokens-out">—</span>
+        </div>
+        <div class="tag" style="margin: 28px 0 18px">Activity</div>
+        <div id="activity">
+          <p class="notice">The agent’s work will appear here.</p>
+        </div>
+        <details class="raw">
+          <summary>Inspect JSON events</summary>
+          <pre id="raw">No events yet.</pre>
+        </details>
+      </aside>
+    </div>
+    <script>
+      (() => {
+        const $ = (selector) => document.querySelector(selector);
+        let current = localStorage.getItem("sumi-chat-current") || null;
+        let source,
+          events = [],
+          rows = [],
+          busy = false,
+          sending = false,
+          booted = false;
+        let received = new Set(),
+          started = 0,
+          lastTurn = 0;
+        const drafts = JSON.parse(
+          localStorage.getItem("sumi-chat-drafts") || "{}",
+        );
+        function saveDraft() {
+          drafts[current || "new"] = $("#prompt").value;
+          localStorage.setItem("sumi-chat-drafts", JSON.stringify(drafts));
+        }
+        function error(message) {
+          $("#error").textContent = message || "";
+          $("#error").hidden = !message;
+        }
+        async function api(path, data) {
+          const response = await fetch(
+            path,
+            data
+              ? {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Sumi-Token": window.SUMI_REVIEW.token,
+                  },
+                  body: JSON.stringify(data),
+                }
+              : {},
+          );
+          const result = await response.json();
+          if (!response.ok) throw Error(result.error || "Request failed");
+          return result;
+        }
+        function make(tag, cls, text) {
+          const el = document.createElement(tag);
+          el.className = cls;
+          if (text != null) el.textContent = text;
+          return el;
+        }
+        function renderText(element, text) {
+          element.replaceChildren();
+          text.split(/```[^\n]*\n([\s\S]*?)```/g).forEach((part, index) => {
+            if (index % 2) {
+              element.append(make("pre", "", part));
+              return;
+            }
+            part.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).forEach((piece) => {
+              if (piece.startsWith("**") && piece.endsWith("**"))
+                element.append(make("strong", "", piece.slice(2, -2)));
+              else if (piece.startsWith("`") && piece.endsWith("`"))
+                element.append(make("code", "", piece.slice(1, -1)));
+              else element.append(document.createTextNode(piece));
+            });
+          });
+        }
+        function render() {
+          const transcript = $("#transcript"),
+            follow =
+              transcript.scrollHeight -
+                transcript.scrollTop -
+                transcript.clientHeight <
+              90;
+          const items = new Map(),
+            messages = [],
+            activity = [];
+          let usage,
+            elapsed,
+            status = "Ready";
+          for (const e of events) {
+            if (e.type === "chat.user") {
+              messages.push({ kind: "user", text: e.text });
+              usage = null;
+              elapsed = null;
+              status = "Working";
+            }
+            if (e.item) {
+              items.set(`${e.turn}:${e.item.id}`, e.item);
+            }
+            if (e.type === "turn.completed") usage = e.usage;
+            if (e.type === "chat.done") {
+              elapsed = e.elapsed;
+              status = e.status === "idle" ? "Ready" : e.status;
+            }
+            if (
+              e.type === "chat.error" ||
+              e.type === "error" ||
+              e.type === "turn.failed"
+            )
+              activity.push({
+                type: "Error",
+                text: e.message || e.error?.message || "Turn failed",
+              });
+            if (e.item?.type === "agent_message" && e.type === "item.completed")
+              messages.push({ kind: "agent", text: e.item.text });
+          }
+          for (const item of items.values()) {
+            if (item.type !== "agent_message" && item.type !== "reasoning")
+              activity.push({
+                type: item.type.replaceAll("_", " "),
+                text:
+                  item.command || item.query || item.tool || item.status || "",
+                output: item.aggregated_output,
+              });
+          }
+          $("#messages").replaceChildren(
+            ...messages.map((message) => {
+              const article = make("article", `message ${message.kind}`);
+              article.append(
+                make(
+                  "div",
+                  "speaker",
+                  message.kind === "user" ? "You" : "✳  Luna",
+                ),
+              );
+              const body = make("div", "body");
+              renderText(body, message.text || "");
+              article.append(body);
+              return article;
+            }),
+          );
+          $("#welcome").hidden = messages.length > 0;
+          $("#activity").replaceChildren(
+            ...activity.map((item) => {
+              const el = make("div", "activity");
+              el.append(
+                make("strong", "", item.type),
+                make("p", "", item.text),
+              );
+              if (item.output) el.append(make("p", "", item.output));
+              return el;
+            }),
+          );
+          $("#raw").textContent = events
+            .map((e) => JSON.stringify(e, null, 2))
+            .join("\n");
+          $("#status").textContent = busy ? "Working" : status;
+          $("#working").hidden = !busy;
+          $("#stop").hidden = !busy;
+          $("#send").disabled = busy || sending;
+          $("#tokens-in").textContent =
+            usage?.input_tokens?.toLocaleString() || "—";
+          $("#tokens-cached").textContent =
+            usage?.cached_input_tokens?.toLocaleString() || "—";
+          $("#tokens-out").textContent =
+            usage?.output_tokens?.toLocaleString() || "—";
+          $("#elapsed").textContent = elapsed != null ? `${elapsed}s` : "—";
+          if (follow) transcript.scrollTop = transcript.scrollHeight;
+        }
+        function select(id) {
+          saveDraft();
+          current = id;
+          localStorage.setItem("sumi-chat-current", id || "");
+          source?.close();
+          events = [];
+          received = new Set();
+          lastTurn = 0;
+          $("#prompt").value = drafts[id || "new"] || "";
+          busy = rows.find((r) => r.id === id)?.status === "running";
+          window.SumiLiveBusy = busy;
+          render();
+          renderList();
+          if (!id) return;
+          source = new EventSource("/chat/events?id=" + encodeURIComponent(id));
+          source.onmessage = ({ data, lastEventId }) => {
+            if (received.has(lastEventId)) return;
+            received.add(lastEventId);
+            const event = JSON.parse(data);
+            events.push(event);
+            if (event.type === "chat.user" && event.turn >= lastTurn) {
+              lastTurn = event.turn;
+              busy = true;
+              started = Date.now();
+            }
+            if (event.type === "chat.done") {
+              busy = false;
+              void refresh();
+            }
+            window.SumiLiveBusy = busy;
+            render();
+          };
+          source.onopen = () => {
+            $("#connection").textContent = "Connected";
+          };
+          source.onerror = () => {
+            $("#connection").textContent = "Reconnecting";
+          };
+        }
+        function renderList() {
+          $("#conversations").replaceChildren(
+            ...rows
+              .slice()
+              .reverse()
+              .map((row) => {
+                const button = make(
+                  "button",
+                  "conversation" + (row.id === current ? " selected" : ""),
+                  (row.status === "running" ? "◌ " : "") + row.title,
+                );
+                button.onclick = () => select(row.id);
+                return button;
+              }),
+          );
+          $("#title").textContent =
+            rows.find((r) => r.id === current)?.title || "A fresh conversation";
+        }
+        async function refresh() {
+          try {
+            const data = await api("/chat/state");
+            rows = data.conversations;
+            renderList();
+            $("#connection").textContent = "Connected";
+          } catch (e) {
+            $("#connection").textContent = "Disconnected";
+          }
+        }
+        async function send(event) {
+          event?.preventDefault();
+          if (busy || sending || !$("#prompt").value.trim()) return;
+          error("");
+          sending = true;
+          render();
+          const message = $("#prompt").value;
+          try {
+            const data = await api("/chat/send", {
+              conversation: current,
+              message,
+            });
+            $("#prompt").value = "";
+            saveDraft();
+            drafts[data.id] = "";
+            localStorage.setItem("sumi-chat-drafts", JSON.stringify(drafts));
+            await refresh();
+            select(data.id);
+            $("#prompt").blur();
+          } catch (e) {
+            error(e.message);
+          } finally {
+            sending = false;
+            render();
+          }
+        }
+        $("#composer").onsubmit = send;
+        $("#prompt").oninput = saveDraft;
+        $("#prompt").onkeydown = (e) => {
+          if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            void send();
+          }
+        };
+        $("#stop").onclick = async () => {
+          try {
+            await api("/chat/stop", { conversation: current });
+          } catch (e) {
+            error(e.message);
+          }
+        };
+        $("#new").onclick = $("#new-mobile").onclick = () => {
+          select(null);
+          $("#prompt").focus();
+        };
+        $("#inspect").onclick = () => {
+          document.body.classList.toggle("inspector-hidden");
+          document.body.classList.toggle("inspector-open");
+        };
+        document.querySelectorAll("[data-prompt]").forEach(
+          (button) =>
+            (button.onclick = () => {
+              $("#prompt").value = button.dataset.prompt;
+              saveDraft();
+              $("#prompt").focus();
+            }),
+        );
+        window.SumiScene = {
+          get: () => ({
+            conversation: current,
+            draft: $("#prompt").value,
+            inspectorHidden:
+              document.body.classList.contains("inspector-hidden"),
+            scroll: $("#transcript").scrollTop,
+          }),
+          set: (scene) => {
+            if (!scene) return;
+            if (scene.conversation !== undefined) {
+              current = scene.conversation;
+              localStorage.setItem("sumi-chat-current", current || "");
+            }
+            if (scene.draft !== undefined) {
+              drafts[current || "new"] = scene.draft;
+              $("#prompt").value = scene.draft;
+            }
+            document.body.classList.toggle(
+              "inspector-hidden",
+              !!scene.inspectorHidden,
+            );
+            if (booted) select(current);
+            if (scene.scroll)
+              requestAnimationFrame(() => {
+                $("#transcript").scrollTop = scene.scroll;
+              });
+          },
+        };
+        $("#prompt").value = drafts[current || "new"] || "";
+        document.addEventListener("DOMContentLoaded", async () => {
+          await refresh();
+          if (current && !rows.some((r) => r.id === current)) current = null;
+          booted = true;
+          select(current);
+          setInterval(refresh, 4000);
+          setInterval(() => {
+            if (busy)
+              $("#elapsed").textContent =
+                Math.floor((Date.now() - started) / 1000) + "s";
+          }, 1000);
+        });
+      })();
+    </script>
+  </body>
+</html>

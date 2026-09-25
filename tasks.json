@@ -566,5 +566,23 @@
       "feedback-mode.mjs restores Agentation active mode through the accessible toolbar launcher after React mounts; inactive mode remains inactive. Short cross-document transition respects reduced motion.",
       "Isolated real Chromium test passed repeated publication with active mode, draft deferral and preservation, update after dismissal, and deliberately disabled mode. All API calls intercepted; no worker jobs dispatched. Three existing Node/DOM tests pass. Updated bundle served live."
     ]
+  },
+  {
+    "id": "LF-34",
+    "title": "Prototype a live Codex agent chat with streaming events and UI review",
+    "status": "done",
+    "depends_on": [
+      "LF-33"
+    ],
+    "acceptance": [
+      "Serve a new interactive chat design backed by native Luna JSONL with resumable conversations and stop.",
+      "Expose real activity and usage; preserve sessions across UI review updates.",
+      "Reuse annotation pool in a separate disposable JJ repository and verify live chat end to end."
+    ],
+    "evidence": [
+      "experiments/agent-chat/: live local UI with conversation sidebar, chat, activity inspector, real Luna low JSONL->SSE, persistent thread resume, stop, drafts, usage, and separate Agentation/JJ review pool at 127.0.0.1:8771.",
+      "Real Chromium test verified reply, memory across resume, file creation/read command, usage, reload continuity, and stop; inspected empty and conversation screenshots. Four chat tests, nine existing pool tests and three reload tests passed.",
+      "Real browser annotation cf9d94ec8fd3 changed sidebar badge and published with automatic reload and active comment-tool restoration. verification.json records usage/session/review evidence. Design remains a prototype for user iteration; no final design approval inferred."
+    ]
   }
 ]

@@ -12,17 +12,18 @@ document.body.append(panel);
 const shadow = panel.attachShadow({ mode: "open" });
 shadow.innerHTML = `<style>:host{position:fixed;left:16px;bottom:16px;z-index:99997;font:13px/1.45 system-ui;color:#eee}details{background:#171d2b;border:1px solid #4b5263;border-radius:12px;box-shadow:0 8px 30px #0007;max-width:min(380px,85vw)}summary{cursor:pointer;padding:12px 16px;font-weight:600}section{padding:0 16px 14px;max-height:42vh;overflow:auto}p{margin:8px 0;color:#bfc7d5}button,a{color:#ffcd83}button{background:#283145;border:1px solid #576278;border-radius:6px;padding:6px 10px;cursor:pointer}article{padding:10px 0;border-top:1px solid #3d4556;white-space:pre-wrap}small{display:block;color:#bfc7d5}#latest{display:none;background:#efb35b;color:#151a23;padding:10px 15px;border-radius:8px;margin-bottom:8px;font-weight:650;text-decoration:none}</style><a id="latest" href="/">New revision ready →</a><details open><summary id="summary">Luna pool · connecting</summary><section><p>Click the annotation button at bottom right, select something, and save a comment. Saving sends it to a Luna immediately. Edits create another job.</p><p id="network"></p><p id="live-status"></p><button id="live">Live updates: on</button><div><button id="pause">Pause new work</button> <a href="/api/export" target="_blank">History</a></div><div id="jobs"></div></section></details>`;
 const $ = (s) => shadow.querySelector(s);
+if (config.appName === "Sumi chat review") $("details").open = false;
 const key = "sumi-bebop-outbox";
 let outbox = JSON.parse(localStorage.getItem(key) || "[]"),
   sending = false,
   last = "";
 try {
   const scene = new URLSearchParams(location.search).get("scene");
-  if (scene) window.BebopScene?.set?.(JSON.parse(scene));
+  if (scene) (window.SumiScene || window.BebopScene)?.set?.(JSON.parse(scene));
 } catch {}
 const live = installLiveReload(window, {
   revision: config.revision,
-  pending: () => sending || outbox.length > 0,
+  pending: () => sending || outbox.length > 0 || window.SumiLiveBusy === true,
   panel: $("details"),
   status: $("#live-status"),
 });
@@ -50,7 +51,7 @@ function submit(annotation) {
       key: fingerprint,
       revision: config.revision,
       annotation,
-      scene: window.BebopScene?.get?.() || {},
+      scene: (window.SumiScene || window.BebopScene)?.get?.() || {},
       url: location.href,
     });
     persist();
@@ -84,7 +85,7 @@ async function drain() {
 }
 createRoot(container).render(
   <Agentation
-    appName="Bebop live review"
+    appName={config.appName || "Bebop live review"}
     enableKeyboardShortcuts={false}
     copyToClipboard={false}
     onAnnotationAdd={submit}

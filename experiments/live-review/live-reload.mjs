@@ -56,7 +56,7 @@ export function installLiveReload(win, { revision, pending, panel, status }) {
     const saved = JSON.parse(win.sessionStorage.getItem(storageKey) || "null");
     win.sessionStorage.removeItem(storageKey);
     if (saved?.revision === revision && enabled) {
-      win.BebopScene?.set?.(saved.scene);
+      (win.SumiScene || win.BebopScene)?.set?.(saved.scene);
       panel.open = saved.panelOpen;
       if (saved.feedbackActive) restoreFeedbackMode(win);
       win.requestAnimationFrame(() =>
@@ -97,7 +97,7 @@ export function installLiveReload(win, { revision, pending, panel, status }) {
           "Update ready · waiting for you to finish editing or sending";
         return;
       }
-      const scene = win.BebopScene?.get?.() || {};
+      const scene = (win.SumiScene || win.BebopScene)?.get?.() || {};
       const next = new URL(`/r/${latest}/`, win.location.href);
       next.searchParams.set("live", "1");
       next.searchParams.set("scene", JSON.stringify(scene));

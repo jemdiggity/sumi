@@ -1,4 +1,4 @@
-Reconcile one candidate with the current Cowboy Bebop preview in index.html.
+Reconcile one candidate with the current UI preview in index.html.
 The coordinator owns JJ. Edit only index.html; no jj/git mutations, dependency
 installation, network, unrelated workspaces, or additional agents.
 
