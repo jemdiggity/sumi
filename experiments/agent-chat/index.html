@@ -28,20 +28,20 @@
           sans-serif;
       }
       body[data-skin="tui"] {
-        --paper: #101510;
-        --panel: #192019;
-        --ink: #d7e8d0;
-        --muted: #8ea08a;
-        --line: #405440;
-        --accent: #a6d875;
-        --green: #a6d875;
+        --paper: #1b1b24;
+        --panel: #242430;
+        --ink: #e0def4;
+        --muted: #9896a8;
+        --line: #393846;
+        --accent: #b4a1db;
+        --green: #9ccfd8;
         font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
       }
       body[data-skin="tui"] .icon-button,
       body[data-skin="tui"] .suggestion,
       body[data-skin="tui"] .composer,
       body[data-skin="tui"] .new {
-        border-radius: 0;
+        border-radius: 7px;
         box-shadow: none;
       }
       body[data-skin="tui"] .composer {
@@ -212,6 +212,9 @@
         overflow: auto;
         padding: 30px max(28px, calc((100% - 720px) / 2));
         scroll-behavior: smooth;
+      }
+      body[data-skin="tui"] #transcript {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
       .welcome {
         max-width: 650px;
@@ -440,6 +443,7 @@
       }
       .activity p {
         color: var(--muted);
+        font-family: ui-monospace, monospace;
         white-space: pre-wrap;
         margin: 4px 0;
         max-height: 160px;
@@ -555,7 +559,7 @@
       }
       body[data-skin="tui"] .message.user,
       body[data-skin="tui"] .conversation.selected {
-        background: #142b1d;
+        background: #302d40;
         color: var(--ink);
       }
       body[data-skin="tui"] .message pre {
@@ -565,6 +569,52 @@
         .message.thinking .speaker::after {
           animation: none;
         }
+      }
+
+      /* Terminal typography, matching the monospace transcript reference. */
+      :root {
+        --chat-font:
+          "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      }
+      body,
+      body[data-skin="tui"],
+      body[data-skin="tui"] #transcript,
+      button,
+      input,
+      select,
+      textarea,
+      .welcome h2,
+      body[data-skin="tui"] .welcome h2 {
+        font-family: var(--chat-font);
+      }
+      body {
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      .message .body,
+      #prompt {
+        font-size: 17px;
+        line-height: 1.6;
+      }
+      .message .body {
+        font-weight: 400;
+        letter-spacing: 0;
+      }
+      .message pre,
+      .message code {
+        font-family: var(--chat-font);
+        font-size: 0.92em;
+      }
+      .welcome h2 {
+        font-size: clamp(28px, 3vw, 42px);
+        letter-spacing: -1px;
+      }
+      .tag,
+      .speaker,
+      .model,
+      .connection,
+      .notice {
+        font-family: var(--chat-font);
       }
     </style>
   </head>
@@ -614,7 +664,12 @@
             </button>
           </div>
         </header>
-        <section id="transcript" aria-label="Conversation" aria-live="polite">
+        <section
+          id="transcript"
+          aria-label="Conversation"
+          aria-live="polite"
+          tabindex="0"
+        >
           <div class="welcome" id="welcome">
             <div class="eyebrow">A conversation with possibility</div>
             <h2>What are we<br />working on today?</h2>
@@ -828,7 +883,7 @@
             )
               activity.push({
                 turn: e.turn,
-                type: "Error",
+                type: "Turn failed",
                 text: e.message || e.error?.message || "Turn failed",
               });
             if (e.item?.type === "agent_message" && e.type === "item.completed")
@@ -856,8 +911,6 @@
           }
           const renderedMessages = messages.map((message) => {
             const article = make("article", `message ${message.kind}`);
-            if (message.kind === "user")
-              article.append(make("div", "speaker", "You"));
             const body = make("div", "body");
             renderText(body, message.text || "");
             article.append(body);
