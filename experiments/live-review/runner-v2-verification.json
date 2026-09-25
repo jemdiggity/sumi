@@ -1,0 +1,149 @@
+{
+  "scope": "Isolated canary: real Luna color edit; synthetic overlapping title edits followed by real Luna reconciliation. Not a comparative benchmark.",
+  "jobs": [
+    {
+      "job": "e1ec2285b1fb",
+      "status": "published",
+      "comment": "Append \" | Crew guide\" to the browser title, preserving any prefix already published.",
+      "elapsed_seconds": 31.61,
+      "timeline": [
+        {
+          "phase": "preparing",
+          "at": "2026-09-25T18:50:26.259896+00:00"
+        },
+        {
+          "phase": "working",
+          "at": "2026-09-25T18:50:27.260631+00:00"
+        },
+        {
+          "phase": "checking",
+          "at": "2026-09-25T18:50:27.263433+00:00"
+        },
+        {
+          "phase": "combining",
+          "at": "2026-09-25T18:50:28.048727+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "reconciling",
+          "at": "2026-09-25T18:50:28.497880+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "publishing",
+          "at": "2026-09-25T18:50:57.842758+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "published",
+          "at": "2026-09-25T18:50:57.869499+00:00"
+        }
+      ],
+      "runs": [
+        {
+          "id": "bebop-e1ec2285b1fb-reconcile",
+          "session_id": "01a0d9e7-9a54-7df3-b8ca-c3987c068df2",
+          "elapsed_seconds": 28.11,
+          "usage_cumulative": {
+            "input_tokens": 175503,
+            "cached_input_tokens": 148480,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 886,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "job": "d1455b422927",
+      "status": "published",
+      "comment": "Prepend \"Space jazz: \" to the browser title.",
+      "elapsed_seconds": 3.68,
+      "timeline": [
+        {
+          "phase": "preparing",
+          "at": "2026-09-25T18:50:22.577178+00:00"
+        },
+        {
+          "phase": "working",
+          "at": "2026-09-25T18:50:24.021807+00:00"
+        },
+        {
+          "phase": "checking",
+          "at": "2026-09-25T18:50:24.051457+00:00"
+        },
+        {
+          "phase": "combining",
+          "at": "2026-09-25T18:50:24.786601+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "publishing",
+          "at": "2026-09-25T18:50:26.180268+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "published",
+          "at": "2026-09-25T18:50:26.251534+00:00"
+        }
+      ],
+      "runs": []
+    },
+    {
+      "job": "4485be689fc0",
+      "status": "published",
+      "comment": "Transport test by Codex: change only the --orange CSS variable to #ef824d. Preserve all other colors and behavior.",
+      "elapsed_seconds": 11.67,
+      "timeline": [
+        {
+          "phase": "preparing",
+          "at": "2026-09-25T18:50:10.854922+00:00"
+        },
+        {
+          "phase": "working",
+          "at": "2026-09-25T18:50:11.563011+00:00"
+        },
+        {
+          "phase": "checking",
+          "at": "2026-09-25T18:50:20.578470+00:00"
+        },
+        {
+          "phase": "combining",
+          "at": "2026-09-25T18:50:21.484960+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "publishing",
+          "at": "2026-09-25T18:50:22.437658+00:00",
+          "attempt": 1
+        },
+        {
+          "phase": "published",
+          "at": "2026-09-25T18:50:22.523401+00:00"
+        }
+      ],
+      "runs": [
+        {
+          "id": "bebop-4485be689fc0-edit",
+          "session_id": "01a0d9e7-55a2-7b10-9000-ac1fc8f09f4f",
+          "elapsed_seconds": 8.98,
+          "usage_cumulative": {
+            "input_tokens": 50864,
+            "cached_input_tokens": 46336,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 215,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    }
+  ],
+  "migration": {
+    "from": "54368339de3aa6575db8303d55fb01aa4b59d3c0",
+    "to": "80a648f88f0f612c76fcbec48a579a22c1cc34a6",
+    "old_max_line": 9368,
+    "new_max_line": 126,
+    "new_lines": 1298,
+    "validation": "PASS: JavaScript initialization, roster, search, details, crew filter, scene restoration, no conflict markers"
+  }
+}

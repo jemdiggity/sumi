@@ -19,12 +19,17 @@ workers never concurrently edit the same working directory. All raw results,
 failed attempts, and originals are retained.
 
 The coordinator combines a candidate with the latest published revision in a
-separate integration workspace. Conflicts or failed combined checks trigger one
-bounded Luna reconciliation pass in that workspace. If checks still fail, the
+separate integration workspace. Slow reconciliation and validation run outside
+the publication lock. Before publishing, the coordinator checks that the live
+revision is still the one it merged; if it advanced, the reconciled candidate is
+merged with the new head and checked again (at most three merge attempts).
+Conflicts or failed combined checks trigger a bounded Luna reconciliation pass
+for that attempt, without holding up independent clean results. If checks still fail, the
 last published preview stays available and the job shows failed. Successful
 publication is a proposed fix, not reviewer acceptance. A new-revision link
-appears without reloading the page being annotated. Plain questions/no file
-change produce an answer without publishing an unnecessary revision.
+appears without reloading the page being annotated. Workers return a structured outcome. A claimed edit with no file diff fails;
+other incomplete/no-change outcomes need attention. Genuine answers produce no
+new revision. Formatting alone does not count as an edit.
 
 React is used only for the Agentation toolbar. Its documented annotation callbacks
 feed the local queue directly; this pilot does not route through Agentation MCP.
@@ -37,11 +42,13 @@ Requires Python 3, JJ, an authenticated Codex CLI, and Node. Build dependency ro
 must contain agentation 3.1.2, React/react-dom 19.2.0, and esbuild 0.25.10. The
 existing /Users/jeremyhale/work/sumi-review-prototype supplies those locally.
 DOM checking uses linkedom 0.18.13 installed in its .qa/node_modules.
+Source normalization uses Prettier 3.6.2; install it locally with
+`npm install --prefix .playground/live-tools --ignore-scripts prettier@3.6.2`.
 
 ```sh
 mkdir -p .playground/live-bebop
 node experiments/live-review/build.mjs /path/to/dependency-project "$PWD/.playground/live-bebop/review.js"
-python3 experiments/live-review/server.py --root "$PWD/.playground/live-bebop" --bundle "$PWD/.playground/live-bebop/review.js" --registry "$PWD/.playground/external-runs" --dom-module /path/to/node_modules/linkedom/esm/index.js
+python3 experiments/live-review/server.py --root "$PWD/.playground/live-bebop" --bundle "$PWD/.playground/live-bebop/review.js" --registry "$PWD/.playground/external-runs" --dom-module /path/to/node_modules/linkedom/esm/index.js --formatter "$PWD/.playground/live-tools/node_modules/prettier/bin/prettier.cjs"
 ```
 
 Default port 8770; binds 127.0.0.1. `--workers` adjusts concurrency. Server restart
@@ -74,3 +81,34 @@ Limits: no semantic correctness guarantee from a clean merge or DOM check, no
 accounts/LAN service, no automated screenshot comparison, no warm-session reuse,
 no intent grouping or cancellation of running work yet. Reconciliation receives
 prior published feedback to help preserve intent but remains a model judgment.
+
+## Runner v2 verification (2026-09-25)
+
+The baseline and live HTML/CSS/JS/SVG are formatted. Live revision
+80a648f88f0f612c76fcbec48a579a22c1cc34a6 preserves prior published changes;
+its longest line is 126 characters (previously 9,368). Original snapshots remain
+immutable. Even jobs targeting an old revision get formatted source, snapshotted
+before the worker starts; formatter changes cannot masquerade as a worker edit.
+Prettier uses an explicit empty ignore file so `.playground` is never skipped.
+
+Worker guidance: worker-prompt.md. Reconciliation guidance: reconcile-prompt.md.
+Each reconciler receives read-only reviewed/current/candidate HTML plus intent
+context. The coordinator requests Git diff3-style markers through JJ's per-command
+configuration; the prompt also explains snapshot-format fallback and longer
+markers. See [JJ's documented marker formats](https://www.jj-vcs.dev/latest/conflicts/).
+No global JJ configuration is changed. Structured results use result.schema.json.
+
+Nine regression tests pass, including a slow conflicting repair concurrent with
+a clean publication, remerging the slow result against the advanced head,
+no-op edit-claim rejection, and formatting inside ignored directories. Run with
+`SUMI_DOM_MODULE` and `SUMI_FORMATTER` set to the local module/CLI paths.
+
+Isolated native canary: one CSS variable edit used 8.98 seconds in Luna and
+11.67 seconds through publication (215 output tokens). A deliberate title
+conflict, with synthetic side edits, was resolved by real Luna in 28.11 seconds
+and published with both title changes intact. These are smoke checks, not a
+controlled comparison. See runner-v2-verification.json for sessions and phases.
+
+Job records now include phase timestamps. Original no-op requests 115880ab53ab
+and 485eb742a16a were relabelled needs attention with the audit finding; their
+original replies/workspaces were retained. They were not silently retried.

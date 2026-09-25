@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "outcome": {
+      "type": "string",
+      "enum": ["changed", "answer", "already_satisfied", "blocked"]
+    },
+    "summary": { "type": "string" }
+  },
+  "required": ["outcome", "summary"]
+}

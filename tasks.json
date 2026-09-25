@@ -515,5 +515,25 @@
       "Six backend tests pass, including idempotency, restart state, successful publication, invalid candidate preservation, and conflict reconciliation. Two real HTTP annotation payloads published via native Luna in 9.99s and 24.05s; both changes verified in combined HTML.",
       "Running locally at http://127.0.0.1:8770/. Original revisions and failed test attempts preserved. Native Chrome control unavailable; actual toolbar click flow and visual layout still need user exercise. Only this pilot automatically dispatches comments."
     ]
+  },
+  {
+    "id": "LF-31",
+    "title": "Remove avoidable live-review latency and improve JJ worker guidance",
+    "status": "done",
+    "depends_on": [
+      "LF-30"
+    ],
+    "acceptance": [
+      "Readable source and bounded patches for future workers.",
+      "Conflicting repairs do not hold publication lock; advancing revisions cannot be overwritten.",
+      "Explicit JJ reference files and conflict guidance; no-op edit claims flagged.",
+      "Regression tests and live runner upgrade preserve published changes and queued comments."
+    ],
+    "evidence": [
+      "Formatted baseline and live source; latest live revision 80a648f88f0f612c76fcbec48a579a22c1cc34a6 has maximum line length 126. Existing published content and historical revisions preserved.",
+      "Reconciliation runs outside publication lock; compare-before-publish and up to three remerges preserve concurrently advanced previews. Nine regression tests pass, including clean publication during blocked repair and final preservation of both changes.",
+      "worker-prompt.md and reconcile-prompt.md constrain patches, explain JJ diff3/snapshot markers, and supply clean reference files. Structured outcomes reject claimed edits with empty diffs; prior two no-ops flagged needs attention.",
+      "Native Luna canary: CSS variable edit 8.98s model / 11.67s publication; real reconciliation of deliberately conflicting synthetic title edits succeeded in 28.11s. runner-v2-verification.json records evidence. Updated service running at 127.0.0.1:8770 with queue resumed."
+    ]
   }
 ]
