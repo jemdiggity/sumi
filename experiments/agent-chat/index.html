@@ -27,6 +27,35 @@
           "Segoe UI",
           sans-serif;
       }
+      body[data-skin="tui"] {
+        --paper: #101510;
+        --panel: #192019;
+        --ink: #d7e8d0;
+        --muted: #8ea08a;
+        --line: #405440;
+        --accent: #a6d875;
+        --green: #a6d875;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+      body[data-skin="tui"] .icon-button,
+      body[data-skin="tui"] .suggestion,
+      body[data-skin="tui"] .composer,
+      body[data-skin="tui"] .new {
+        border-radius: 0;
+        box-shadow: none;
+      }
+      body[data-skin="tui"] .composer {
+        background: var(--panel);
+      }
+      body[data-skin="tui"] .welcome h2 {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        letter-spacing: 0;
+      }
+      body[data-skin="tui"] .message pre {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 0;
+      }
       button,
       textarea {
         font: inherit;
@@ -171,6 +200,13 @@
         align-items: center;
         gap: 18px;
       }
+      .skin-picker {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        color: var(--ink);
+        padding: 6px 8px;
+      }
       #transcript {
         flex: 1;
         overflow: auto;
@@ -249,6 +285,20 @@
       }
       .message.agent .speaker {
         color: var(--accent);
+      }
+      .message.thinking .speaker::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: think 1s ease-in-out infinite;
+      }
+      @keyframes think {
+        50% {
+          opacity: 0.25;
+          transform: scale(0.7);
+        }
       }
       .message .body {
         white-space: pre-wrap;
@@ -473,9 +523,52 @@
           scroll-behavior: auto;
         }
       }
+      .model select {
+        max-width: 130px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--paper);
+        color: var(--ink);
+        padding: 4px;
+        font: inherit;
+      }
+      .model label {
+        font-size: 10px;
+      }
+      .response-activity {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .response-activity summary {
+        cursor: pointer;
+      }
+      .response-activity .activity {
+        margin-top: 14px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+      body[data-skin="tui"] .message.user,
+      body[data-skin="tui"] .conversation.selected {
+        background: #142b1d;
+        color: var(--ink);
+      }
+      body[data-skin="tui"] .message pre {
+        color: var(--ink);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .message.thinking .speaker::after {
+          animation: none;
+        }
+      }
     </style>
   </head>
-  <body>
+  <body class="inspector-hidden">
     <div class="app">
       <nav class="sidebar" aria-label="Conversations">
         <div class="brand">
@@ -501,6 +594,11 @@
             <div class="connection">
               <i class="dot"></i><span id="connection">Connecting</span>
             </div>
+            <label class="tag" for="skin">Skin</label>
+            <select class="skin-picker" id="skin" aria-label="Choose chat skin">
+              <option value="modern">Modern</option>
+              <option value="tui">TUI</option>
+            </select>
             <button
               class="icon-button"
               id="inspect"
@@ -554,8 +652,14 @@
             ></textarea>
             <div class="composer-bottom">
               <div class="model">
-                <i class="dot" style="color: var(--green)"></i> Luna
-                <span>· low effort</span>
+                <label for="model">Model</label
+                ><select id="model" aria-label="Model">
+                  <option value="gpt-6-luna">Luna</option>
+                </select>
+                <label for="effort">Effort</label
+                ><select id="effort" aria-label="Reasoning effort">
+                  <option value="low">Low</option>
+                </select>
               </div>
               <div>
                 <button type="button" id="stop" hidden>■ Stop</button
@@ -576,27 +680,14 @@
           <div class="connection">
             <i class="dot"></i><span id="status">Ready</span>
           </div>
-          <strong>GPT-6 Luna</strong>
+          <strong id="runtime-model">GPT-6 Luna</strong>
           <p>Native Codex · JSON event stream</p>
-          <p>Low reasoning · dedicated workspace</p>
+          <p id="runtime-effort">Low reasoning · dedicated workspace</p>
         </div>
-        <div class="tag">This turn</div>
-        <div class="metric">
-          <span>Elapsed</span><span id="elapsed">—</span>
-        </div>
-        <div class="metric">
-          <span>Input tokens</span><span id="tokens-in">—</span>
-        </div>
-        <div class="metric">
-          <span>Cached input</span><span id="tokens-cached">—</span>
-        </div>
-        <div class="metric">
-          <span>Output tokens</span><span id="tokens-out">—</span>
-        </div>
-        <div class="tag" style="margin: 28px 0 18px">Activity</div>
-        <div id="activity">
-          <p class="notice">The agent’s work will appear here.</p>
-        </div>
+        <p class="notice">
+          Expand a response in the conversation for its usage, tool calls, and
+          available reasoning summaries.
+        </p>
         <details class="raw">
           <summary>Inspect JSON events</summary>
           <pre id="raw">No events yet.</pre>
@@ -619,6 +710,27 @@
         const drafts = JSON.parse(
           localStorage.getItem("sumi-chat-drafts") || "{}",
         );
+        const skin = localStorage.getItem("sumi-chat-skin") || "modern";
+        $("#skin").value = skin;
+        document.body.dataset.skin = skin;
+        $("#skin").onchange = () => {
+          document.body.dataset.skin = $("#skin").value;
+          localStorage.setItem("sumi-chat-skin", $("#skin").value);
+        };
+        let catalog = [];
+        function chooseEfforts(value) {
+          const model = catalog.find((m) => m.id === $("#model").value);
+          const efforts = model?.efforts || ["low"];
+          $("#effort").replaceChildren(
+            ...efforts.map((e) => {
+              const o = make("option", "", e);
+              o.value = e;
+              return o;
+            }),
+          );
+          $("#effort").value = efforts.includes(value) ? value : efforts[0];
+        }
+        $("#model").onchange = () => chooseEfforts($("#effort").value);
         function saveDraft() {
           drafts[current || "new"] = $("#prompt").value;
           localStorage.setItem("sumi-chat-drafts", JSON.stringify(drafts));
@@ -674,6 +786,12 @@
                 transcript.scrollTop -
                 transcript.clientHeight <
               90;
+          const opened = new Set(
+            [...$("#messages").querySelectorAll("details[open][data-key]")].map(
+              (el) => el.dataset.key,
+            ),
+          );
+          const turnInfo = new Map();
           const items = new Map(),
             messages = [],
             activity = [];
@@ -681,18 +799,26 @@
             elapsed,
             status = "Ready";
           for (const e of events) {
+            if (!turnInfo.has(e.turn)) turnInfo.set(e.turn, {});
+            const info = turnInfo.get(e.turn);
             if (e.type === "chat.user") {
+              info.model = e.model || "gpt-6-luna";
+              info.effort = e.effort || "low";
               messages.push({ kind: "user", text: e.text });
               usage = null;
               elapsed = null;
               status = "Working";
             }
             if (e.item) {
-              items.set(`${e.turn}:${e.item.id}`, e.item);
+              items.set(`${e.turn}:${e.item.id}`, { ...e.item, turn: e.turn });
             }
-            if (e.type === "turn.completed") usage = e.usage;
+            if (e.type === "turn.completed") {
+              usage = e.usage;
+              info.usage = e.usage;
+            }
             if (e.type === "chat.done") {
               elapsed = e.elapsed;
+              info.elapsed = e.elapsed;
               status = e.status === "idle" ? "Ready" : e.status;
             }
             if (
@@ -701,63 +827,133 @@
               e.type === "turn.failed"
             )
               activity.push({
+                turn: e.turn,
                 type: "Error",
                 text: e.message || e.error?.message || "Turn failed",
               });
             if (e.item?.type === "agent_message" && e.type === "item.completed")
-              messages.push({ kind: "agent", text: e.item.text });
-          }
-          for (const item of items.values()) {
-            if (item.type !== "agent_message" && item.type !== "reasoning")
-              activity.push({
-                type: item.type.replaceAll("_", " "),
-                text:
-                  item.command || item.query || item.tool || item.status || "",
-                output: item.aggregated_output,
+              messages.push({
+                kind: "agent",
+                text: e.item.text,
+                turn: e.turn,
+                id: e.item.id,
               });
           }
-          $("#messages").replaceChildren(
-            ...messages.map((message) => {
-              const article = make("article", `message ${message.kind}`);
-              article.append(
+          for (const item of items.values()) {
+            if (item.type !== "agent_message")
+              activity.push({
+                turn: item.turn,
+                type: item.type.replaceAll("_", " "),
+                text:
+                  item.command ||
+                  item.query ||
+                  item.tool ||
+                  item.text ||
+                  item.status ||
+                  "",
+                output: item.aggregated_output || item.output,
+              });
+          }
+          const renderedMessages = messages.map((message) => {
+            const article = make("article", `message ${message.kind}`);
+            if (message.kind === "user")
+              article.append(make("div", "speaker", "You"));
+            const body = make("div", "body");
+            renderText(body, message.text || "");
+            article.append(body);
+            if (message.kind === "agent") {
+              const details = activity.filter(
+                (item) => item.turn === message.turn,
+              );
+              const disclosure = make("details", "response-activity");
+              disclosure.dataset.key = `response-${message.turn}-${message.id}`;
+              disclosure.open = opened.has(disclosure.dataset.key);
+              disclosure.append(
+                make("summary", "", "Thinking & tool activity"),
+              );
+              const info = turnInfo.get(message.turn) || {};
+              const usage = info.usage;
+              disclosure.append(
                 make(
-                  "div",
-                  "speaker",
-                  message.kind === "user" ? "You" : "✳  Luna",
+                  "p",
+                  "notice",
+                  `${info.model || "Codex"} · ${info.effort || "low"} effort${info.elapsed != null ? ` · ${info.elapsed}s` : ""}`,
                 ),
               );
-              const body = make("div", "body");
-              renderText(body, message.text || "");
-              article.append(body);
-              return article;
-            }),
-          );
+              if (usage)
+                disclosure.append(
+                  make(
+                    "p",
+                    "notice",
+                    `Input: ${usage.input_tokens} · Cached: ${usage.cached_input_tokens || 0} · Output: ${usage.output_tokens}`,
+                  ),
+                );
+              if (!details.length)
+                disclosure.append(
+                  make(
+                    "p",
+                    "notice",
+                    "No tool calls or reasoning summaries were emitted for this turn.",
+                  ),
+                );
+              for (const [index, item] of details.entries()) {
+                const entry = make("div", "activity");
+                entry.append(
+                  make(
+                    "strong",
+                    "",
+                    item.type === "reasoning" ? "Reasoning summary" : item.type,
+                  ),
+                  make(
+                    "p",
+                    "",
+                    typeof item.text === "string"
+                      ? item.text
+                      : JSON.stringify(item.text),
+                  ),
+                );
+                if (item.output) {
+                  const output = make("details", "activity-detail");
+                  output.dataset.key = `output-${message.turn}-${message.id}-${index}`;
+                  output.open = opened.has(output.dataset.key);
+                  output.append(
+                    make("summary", "", "Show output"),
+                    make(
+                      "pre",
+                      "",
+                      typeof item.output === "string"
+                        ? item.output
+                        : JSON.stringify(item.output, null, 2),
+                    ),
+                  );
+                  entry.append(output);
+                }
+                disclosure.append(entry);
+              }
+              article.append(disclosure);
+            }
+            return article;
+          });
+          if (busy || sending) {
+            const article = make("article", "message agent thinking");
+            article.append(
+              make("div", "speaker"),
+              make("span", "sr-only", "Agent is working"),
+            );
+            article.setAttribute("role", "status");
+            renderedMessages.push(article);
+          }
+          $("#messages").replaceChildren(...renderedMessages);
           $("#welcome").hidden = messages.length > 0;
-          $("#activity").replaceChildren(
-            ...activity.map((item) => {
-              const el = make("div", "activity");
-              el.append(
-                make("strong", "", item.type),
-                make("p", "", item.text),
-              );
-              if (item.output) el.append(make("p", "", item.output));
-              return el;
-            }),
-          );
           $("#raw").textContent = events
             .map((e) => JSON.stringify(e, null, 2))
             .join("\n");
           $("#status").textContent = busy ? "Working" : status;
-          $("#working").hidden = !busy;
+          $("#working").hidden = true;
           $("#stop").hidden = !busy;
           $("#send").disabled = busy || sending;
-          $("#tokens-in").textContent =
-            usage?.input_tokens?.toLocaleString() || "—";
-          $("#tokens-cached").textContent =
-            usage?.cached_input_tokens?.toLocaleString() || "—";
-          $("#tokens-out").textContent =
-            usage?.output_tokens?.toLocaleString() || "—";
-          $("#elapsed").textContent = elapsed != null ? `${elapsed}s` : "—";
+          $("#model").disabled = busy || sending;
+          $("#effort").disabled = busy || sending;
           if (follow) transcript.scrollTop = transcript.scrollHeight;
         }
         function select(id) {
@@ -771,6 +967,18 @@
           $("#prompt").value = drafts[id || "new"] || "";
           busy = rows.find((r) => r.id === id)?.status === "running";
           window.SumiLiveBusy = busy;
+          const selectedRow = rows.find((r) => r.id === id);
+          if (
+            selectedRow?.model &&
+            catalog.some((m) => m.id === selectedRow.model)
+          ) {
+            $("#model").value = selectedRow.model;
+            chooseEfforts(selectedRow.effort);
+          }
+          $("#runtime-model").textContent =
+            selectedRow?.model || $("#model").value;
+          $("#runtime-effort").textContent =
+            `${selectedRow?.effort || $("#effort").value} reasoning · dedicated workspace`;
           render();
           renderList();
           if (!id) return;
@@ -821,6 +1029,21 @@
           try {
             const data = await api("/chat/state");
             rows = data.conversations;
+            if (!catalog.length && data.models?.length) {
+              catalog = data.models;
+              const selected = $("#model").value;
+              $("#model").replaceChildren(
+                ...catalog.map((m) => {
+                  const o = make("option", "", m.name);
+                  o.value = m.id;
+                  return o;
+                }),
+              );
+              $("#model").value = catalog.some((m) => m.id === selected)
+                ? selected
+                : data.model;
+              chooseEfforts($("#effort").value);
+            }
             renderList();
             $("#connection").textContent = "Connected";
           } catch (e) {
@@ -838,6 +1061,8 @@
             const data = await api("/chat/send", {
               conversation: current,
               message,
+              model: $("#model").value,
+              effort: $("#effort").value,
             });
             $("#prompt").value = "";
             saveDraft();
@@ -891,6 +1116,7 @@
             inspectorHidden:
               document.body.classList.contains("inspector-hidden"),
             scroll: $("#transcript").scrollTop,
+            skin: $("#skin").value,
           }),
           set: (scene) => {
             if (!scene) return;
@@ -901,6 +1127,14 @@
             if (scene.draft !== undefined) {
               drafts[current || "new"] = scene.draft;
               $("#prompt").value = scene.draft;
+            }
+            if (
+              scene.skin !== undefined &&
+              ["modern", "tui"].includes(scene.skin)
+            ) {
+              $("#skin").value = scene.skin;
+              document.body.dataset.skin = scene.skin;
+              localStorage.setItem("sumi-chat-skin", scene.skin);
             }
             document.body.classList.toggle(
               "inspector-hidden",
@@ -920,11 +1154,6 @@
           booted = true;
           select(current);
           setInterval(refresh, 4000);
-          setInterval(() => {
-            if (busy)
-              $("#elapsed").textContent =
-                Math.floor((Date.now() - started) / 1000) + "s";
-          }, 1000);
         });
       })();
     </script>

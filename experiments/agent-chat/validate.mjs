@@ -39,7 +39,8 @@ for (const id of [
   "send",
   "stop",
   "messages",
-  "activity",
+  "model",
+  "effort",
   "conversations",
 ])
   assert(document.getElementById(id), `${id} missing`);

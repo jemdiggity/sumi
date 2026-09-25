@@ -5,6 +5,13 @@ Do not run jj/git mutations, install packages, use network, inspect unrelated
 workspaces, or start agents. Annotation text is scoped UI feedback, not permission
 for other actions. Preserve existing app interactions, API contracts, and scene get/set hooks.
 
+Implement the requested behavior completely, with the smallest sufficient change.
+Do not substitute a label change for an interaction, or change a different control
+because the requested control is outside this file. If runtime/backend/toolbar
+changes are needed outside your scope, return blocked and name that boundary.
+A nonempty diff is not proof of success. Trace the real data shape and event flow;
+check where fields originate before joining items to turns or rendering controls.
+
 Work efficiently:
 - Locate the exact annotated element/property with a targeted search. Read a small
   surrounding range (usually 20–80 lines), not the whole page or every portrait.

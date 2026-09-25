@@ -584,5 +584,23 @@
       "Real Chromium test verified reply, memory across resume, file creation/read command, usage, reload continuity, and stop; inspected empty and conversation screenshots. Four chat tests, nine existing pool tests and three reload tests passed.",
       "Real browser annotation cf9d94ec8fd3 changed sidebar badge and published with automatic reload and active comment-tool restoration. verification.json records usage/session/review evidence. Design remains a prototype for user iteration; no final design approval inferred."
     ]
+  },
+  {
+    "id": "LF-35",
+    "title": "Audit Luna UI feedback and repair behavior/publication checks",
+    "status": "done",
+    "depends_on": [
+      "LF-34"
+    ],
+    "acceptance": [
+      "Trace requested behavior against transcripts and published diffs.",
+      "Fix response drilldowns, comment Escape, model/effort selection, and verify skins/thinking state.",
+      "Add behavioral publication checks and correct misleading job dispositions."
+    ],
+    "evidence": [
+      "LUNA-REVIEW.md audits all eight user jobs against native transcripts and JJ candidate diffs. Identified wrong Escape target, label-only shortcut, lost event.turn join, partial sidebar drilldown, and correctly blocked backend change.",
+      "Published repair 9fd605298277a01685a164484ed0249d97fe07eb with per-response output/usage/summaries, disclosure state, real model/effort selection, correct Agentation Escape, and TUI contrast. Original replies/publications preserved in audit fields; no reviewer acceptance inferred.",
+      "Browser publication gate rejects audited prior revision and passes repair. Real Luna browser smoke (response, resume, command output, usage, reload, Stop) and real toolbar Escape checks pass. Five backend tests and nine pool regressions pass. Chat service running with UI queue resumed."
+    ]
   }
 ]

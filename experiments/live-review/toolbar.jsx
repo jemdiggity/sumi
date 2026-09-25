@@ -86,7 +86,7 @@ async function drain() {
 createRoot(container).render(
   <Agentation
     appName={config.appName || "Bebop live review"}
-    enableKeyboardShortcuts={false}
+    enableKeyboardShortcuts={true}
     copyToClipboard={false}
     onAnnotationAdd={submit}
     onAnnotationUpdate={submit}

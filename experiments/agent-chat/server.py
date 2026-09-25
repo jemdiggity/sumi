@@ -28,12 +28,81 @@ class ChatPool(review.Pool):
     run_prefix = "chat-ui"
     task_id = "LF-34"
     app_name = "Sumi chat review"
+    worker_context = """The annotation toolbar is Agentation, injected by /assets/review.js after index.html.
+It is NOT the activity inspector. Toolbar changes (including keybindings) require
+coordinator work outside index.html; return blocked for them.
+Chat SSE event shape: {type, turn, item:{id,type,text,command,aggregated_output}}.
+The turn is on the EVENT, not item. IDs may repeat across turns. Reasoning items
+contain only provider-emitted summaries; never fabricate missing thinking.
+/chat/state returns {model,models:[{id,name,efforts}],conversations:[{id,title,status,model,effort}]}.
+/chat/send accepts {conversation,message,model,effort}. Model/effort apply to the next turn.
+/chat/events?id=... emits chat.user, native Codex events, chat.done; chat.user includes model/effort.
+SumiScene preserves browser state. Keep working behavior and drafts across refreshes.
+The coordinator runs real-browser fixtures for turn details, open-state persistence,
+model selection, thinking indicator, and skins before publication. Those fixtures
+protect existing behavior; you still must verify the requested new interaction.
+"""
+
+    def __init__(self, *args, browser_module=None, **kwargs):
+        self.browser_module = (
+            browser_module
+            or HERE.parents[1]
+            / ".playground/live-tools/node_modules/playwright/index.mjs"
+        )
+        super().__init__(*args, **kwargs)
+
+    def check(self, ws):
+        structural = super().check(ws)
+        # Historical candidates may predate current behavior. Apply the browser
+        # contract to the combined preview, not an unmerged historical branch.
+        if ws != self.repo and not ws.name.startswith("merge-"):
+            return structural
+        result = subprocess.run(
+            [
+                "node",
+                str(HERE / "validate-browser.mjs"),
+                str(self.browser_module),
+                str(ws / "index.html"),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=45,
+        )
+        if result.returncode:
+            raise RuntimeError(
+                "Browser behavior check failed: "
+                + (result.stdout + result.stderr)[-2500:]
+            )
+        return structural + "\n" + result.stdout
 
 
 class Chats:
     def __init__(self, root, model="gpt-6-luna"):
         self.root = root
         self.model = model
+        self.models = [
+            {"id": model, "name": "Luna", "efforts": ["low", "medium", "high"]}
+        ]
+        try:
+            cached = json.loads((Path.home() / ".codex/models_cache.json").read_text())
+            available = [
+                {
+                    "id": m["slug"],
+                    "name": m["display_name"],
+                    "efforts": [
+                        e["effort"]
+                        for e in m["supported_reasoning_levels"]
+                        if e["effort"] != "ultra"
+                    ],
+                }
+                for m in cached["models"]
+                if m["slug"] in ("gpt-6-luna", "gpt-6-sol", "gpt-6-astra")
+                and m.get("visibility") == "list"
+            ]
+            if available:
+                self.models = available
+        except (OSError, KeyError, ValueError):
+            pass
         self.root.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
         self.changed = threading.Condition(self.lock)
@@ -56,6 +125,7 @@ class Chats:
         with self.lock:
             return {
                 "model": self.model,
+                "models": self.models,
                 "conversations": [
                     {k: v for k, v in row.items() if k != "events"}
                     for row in self.rows.values()
@@ -86,6 +156,12 @@ class Chats:
             ident = data.get("conversation")
             if ident is not None and ident not in self.rows:
                 raise ValueError("Unknown conversation.")
+            previous = self.rows.get(ident, {})
+            model = data.get("model", previous.get("model", self.model))
+            effort = data.get("effort", previous.get("effort", "low"))
+            choice = next((m for m in self.models if m["id"] == model), None)
+            if not choice or effort not in choice["efforts"]:
+                raise ValueError("Unsupported model or reasoning effort.")
             if not ident:
                 ident = uuid.uuid4().hex[:12]
                 self.rows[ident] = {
@@ -98,10 +174,14 @@ class Chats:
                     "created": review.stamp(),
                 }
             row = self.rows[ident]
+            row["model"], row["effort"] = model, effort
             row["turn"] += 1
             row["status"] = "running"
             row["stop_requested"] = False
-            self.emit(ident, {"type": "chat.user", "text": text})
+            self.emit(
+                ident,
+                {"type": "chat.user", "text": text, "model": model, "effort": effort},
+            )
             threading.Thread(target=self.run, args=(ident, text), daemon=True).start()
             return {"id": ident}
 
@@ -130,6 +210,9 @@ class Chats:
             "Use tools only when the user asks for work needing them. Work only in this disposable workspace. "
             "Do not inspect unrelated directories or start other agents. Do not edit the chat UI or review service.\n"
         )
+        with self.lock:
+            selected_model = self.rows[ident].get("model", self.model)
+            selected_effort = self.rows[ident].get("effort", "low")
         args = [
             "codex",
             "-a",
@@ -141,9 +224,9 @@ class Chats:
             "workspace-write",
             "--json",
             "-m",
-            self.model,
+            selected_model,
             "-c",
-            'model_reasoning_effort="low"',
+            f'model_reasoning_effort="{selected_effort}"',
             "-c",
             "features.multi_agent=false",
         ]
@@ -326,6 +409,7 @@ def main():
     p.add_argument("--dom-module", type=Path, required=True)
     p.add_argument("--formatter", type=Path)
     p.add_argument("--port", type=int, default=8771)
+    p.add_argument("--browser-module", type=Path)
     a = p.parse_args()
     pool = ChatPool(
         a.root / "review",
@@ -334,6 +418,7 @@ def main():
         a.registry,
         a.dom_module,
         formatter=a.formatter,
+        browser_module=a.browser_module,
     )
     chats = Chats(a.root / "chat")
     server = review.ThreadingHTTPServer(("127.0.0.1", a.port), Handler)

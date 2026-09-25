@@ -8,7 +8,7 @@ http://127.0.0.1:8771/. This is a reviewable first design, not an approved final
 - Each conversation owns a disposable workspace and persistent Codex thread ID.
   Each turn starts `codex exec --json` (or `exec resume <thread>`) using existing
   CLI authentication. It is not a continuously running model process.
-- GPT-6 Luna, low reasoning effort. The installed model catalog and official
+- Defaults to GPT-6 Luna, low reasoning effort; model/effort selectors apply to the next turn. The installed model catalog and official
   model guidance identify Luna as the efficient tier; exact account pricing was
   not established. No automatic fallback to a more expensive model.
 - Real JSONL events are forwarded through replayable SSE. This CLI emits agent
@@ -62,8 +62,19 @@ The browser test uses real Luna calls and leaves its conversation as evidence.
 It exercises initial reply, resumed memory, file/tool use, token reporting, draft
 and conversation restoration, and cancellation. Existing pool and live-reload
 regressions cover integration and publication guards. This prototype does not
-provide rich Markdown, attachments, permissions UI, model switching, or concurrent
-chat execution yet.
+provide rich Markdown, attachments, permissions UI, or concurrent chat execution yet.
 
 References: [Codex JSONL and resume](https://learn.chatgpt.com/docs/non-interactive-mode),
 [available model guidance](https://learn.chatgpt.com/docs/models).
+
+See [Luna review audit](LUNA-REVIEW.md) for the failed feedback implementations and
+their repairs. Combined publications now require a real Chromium behavior check:
+
+```sh
+node experiments/agent-chat/validate-browser.mjs /path/to/playwright/index.mjs experiments/agent-chat/index.html
+```
+
+Pass `--browser-module /path/to/playwright/index.mjs` to the server; the default
+is `.playground/live-tools/node_modules/playwright/index.mjs` in this repository.
+Playwright and its Chromium browser must be installed for publication.
+Escape dismisses an annotation draft first, then exits commenting mode.

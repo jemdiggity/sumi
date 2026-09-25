@@ -21,7 +21,8 @@ try {
   );
   await page.getByRole("button", { name: "Send ↑", exact: true }).click();
   await page.waitForFunction(
-    () => document.querySelectorAll(".message.agent").length === 1,
+    () =>
+      document.querySelectorAll(".message.agent:not(.thinking)").length === 1,
     {},
     { timeout: 90000 },
   );
@@ -39,17 +40,16 @@ try {
   await page.getByRole("button", { name: "Send ↑", exact: true }).click();
   await page.waitForFunction(
     () =>
-      document.querySelectorAll(".message.agent").length >= 2 &&
+      document.querySelectorAll(".message.agent:not(.thinking)").length >= 2 &&
       !window.SumiLiveBusy,
     {},
     { timeout: 120000 },
   );
   assert.match(await page.locator("#messages").innerText(), /cobalt-orbit/i);
-  assert.match(
-    await page.locator("#activity").innerText(),
-    /command execution/i,
-  );
-  assert.notEqual(await page.locator("#tokens-out").innerText(), "—");
+  const disclosure = page.locator(".response-activity").last();
+  await disclosure.locator(":scope > summary").click();
+  assert.match(await disclosure.innerText(), /command execution/i);
+  assert.match(await disclosure.innerText(), /Output: [0-9]+/);
   await page.screenshot({
     path: ".playground/chat-agent/conversation.png",
     fullPage: true,
@@ -58,7 +58,8 @@ try {
   await input.fill("A draft to preserve");
   await page.reload();
   await page.waitForFunction(
-    () => document.querySelectorAll(".message.agent").length >= 2,
+    () =>
+      document.querySelectorAll(".message.agent:not(.thinking)").length >= 2,
   );
   assert.equal(await input.inputValue(), "A draft to preserve");
   assert.equal(

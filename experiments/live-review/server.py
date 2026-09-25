@@ -27,6 +27,7 @@ class Pool:
     run_prefix = "bebop"
     task_id = "LF-30"
     app_name = "Bebop live review"
+    worker_context = ""
 
     def __init__(
         self, root, source, bundle, registry, dom_module, workers=6, formatter=None
@@ -451,6 +452,8 @@ class Pool:
             self.jj(["new", "@"], ws)
             prompt = (
                 (HERE / "worker-prompt.md").read_text()
+                + "\nApplication context:\n"
+                + self.worker_context
                 + "\nReview context:\n"
                 + json.dumps(payload, ensure_ascii=False)
             )
