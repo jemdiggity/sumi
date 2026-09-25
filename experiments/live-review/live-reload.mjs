@@ -1,3 +1,5 @@
+import { feedbackActive, restoreFeedbackMode } from "./feedback-mode.mjs";
+
 // Agentation renders editors in open shadow roots; a blurred draft still blocks.
 export function hasEditor(root) {
   if (root.querySelector("[data-annotation-popup]")) return true;
@@ -15,6 +17,15 @@ export function hasEditor(root) {
 
 export function installLiveReload(win, { revision, pending, panel, status }) {
   const storageKey = "sumi-bebop-reload";
+  const transition = win.document.createElement("style");
+  transition.textContent = `
+    @view-transition { navigation: auto; }
+    ::view-transition-group(root) { animation-duration: 120ms; }
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(root) { animation-duration: 0s; }
+    }
+  `;
+  win.document.head.append(transition);
   let navigating = false;
   let composing = false;
   let lastInteraction = Date.now();
@@ -47,6 +58,7 @@ export function installLiveReload(win, { revision, pending, panel, status }) {
     if (saved?.revision === revision && enabled) {
       win.BebopScene?.set?.(saved.scene);
       panel.open = saved.panelOpen;
+      if (saved.feedbackActive) restoreFeedbackMode(win);
       win.requestAnimationFrame(() =>
         win.requestAnimationFrame(() => win.scrollTo(saved.x, saved.y)),
       );
@@ -98,6 +110,7 @@ export function installLiveReload(win, { revision, pending, panel, status }) {
             x: win.scrollX,
             y: win.scrollY,
             panelOpen: panel.open,
+            feedbackActive: feedbackActive(win.document),
           }),
         );
       } catch {}

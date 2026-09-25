@@ -27,7 +27,11 @@ Conflicts or failed combined checks trigger a bounded Luna reconciliation pass
 for that attempt, without holding up independent clean results. If checks still fail, the
 last published preview stays available and the job shows failed. Successful
 publication is a proposed fix, not reviewer acceptance. Live updates automatically load each published revision, preserving the explorer
-scene, page scroll, and pool panel state. Reloads wait for annotation popups to
+scene, page scroll, pool panel state, and active comment-tool mode. The tool
+reopens automatically after publication, so selecting the tool does not block
+updates. Open comment drafts still defer publication until saved or dismissed.
+A short cross-document transition softens navigation where supported, respecting
+reduced-motion preferences. Reloads wait for annotation popups to
 close, focused editors to blur, pending comments to send, and a brief interaction
 pause. Toggle **Live updates** off to pin the current revision. Original and
 proposed-revision history links are pinned (`live=0`); enable live updates to
@@ -117,3 +121,16 @@ controlled comparison. See runner-v2-verification.json for sessions and phases.
 Job records now include phase timestamps. Original no-op requests 115880ab53ab
 and 485eb742a16a were relabelled needs attention with the audit finding; their
 original replies/workspaces were retained. They were not silently retried.
+
+Annotation-mode restoration uses Agentation 3.1’s accessible launcher because the
+SDK does not expose a controlled active-mode prop. It retries briefly for React
+to mount, clicks once, and avoids moving keyboard focus. The isolated Chromium
+check exercises the actual bundled toolbar and intercepts all API calls, so it
+does not enqueue work:
+
+```sh
+SUMI_PLAYWRIGHT=/path/to/playwright/index.mjs node experiments/live-review/test-live-browser.mjs
+```
+
+The test requires the local preview server and an installed Playwright Chromium.
+Transition reference: [Chrome cross-document view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/cross-document).

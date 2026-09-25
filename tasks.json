@@ -550,5 +550,21 @@
     "evidence": [
       "live-reload.mjs follows publication with scene/scroll restoration, editor and outbox guards, and pinned historical links. Three Node/DOM regression tests pass. Built bundle verified byte-for-byte over the running HTTP server. Actual browser interaction remains unverified; existing tabs need one refresh."
     ]
+  },
+  {
+    "id": "LF-33",
+    "title": "Keep annotation mode active across live preview updates",
+    "status": "done",
+    "depends_on": [
+      "LF-32"
+    ],
+    "acceptance": [
+      "Restore active annotation mode after publication without losing drafts.",
+      "Verify real toolbar across repeated revision changes."
+    ],
+    "evidence": [
+      "feedback-mode.mjs restores Agentation active mode through the accessible toolbar launcher after React mounts; inactive mode remains inactive. Short cross-document transition respects reduced motion.",
+      "Isolated real Chromium test passed repeated publication with active mode, draft deferral and preservation, update after dismissal, and deliberately disabled mode. All API calls intercepted; no worker jobs dispatched. Three existing Node/DOM tests pass. Updated bundle served live."
+    ]
   }
 ]
