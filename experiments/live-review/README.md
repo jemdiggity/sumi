@@ -26,8 +26,13 @@ merged with the new head and checked again (at most three merge attempts).
 Conflicts or failed combined checks trigger a bounded Luna reconciliation pass
 for that attempt, without holding up independent clean results. If checks still fail, the
 last published preview stays available and the job shows failed. Successful
-publication is a proposed fix, not reviewer acceptance. A new-revision link
-appears without reloading the page being annotated. Workers return a structured outcome. A claimed edit with no file diff fails;
+publication is a proposed fix, not reviewer acceptance. Live updates automatically load each published revision, preserving the explorer
+scene, page scroll, and pool panel state. Reloads wait for annotation popups to
+close, focused editors to blur, pending comments to send, and a brief interaction
+pause. Toggle **Live updates** off to pin the current revision. Original and
+proposed-revision history links are pinned (`live=0`); enable live updates to
+resume following publication. Annotation anchors remain on their original revision.
+This is automatic full-page reloading, not in-place module replacement. Workers return a structured outcome. A claimed edit with no file diff fails;
 other incomplete/no-change outcomes need attention. Genuine answers produce no
 new revision. Formatting alone does not count as an edit.
 

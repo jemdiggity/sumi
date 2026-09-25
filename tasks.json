@@ -535,5 +535,20 @@
       "worker-prompt.md and reconcile-prompt.md constrain patches, explain JJ diff3/snapshot markers, and supply clean reference files. Structured outcomes reject claimed edits with empty diffs; prior two no-ops flagged needs attention.",
       "Native Luna canary: CSS variable edit 8.98s model / 11.67s publication; real reconciliation of deliberately conflicting synthetic title edits succeeded in 28.11s. runner-v2-verification.json records evidence. Updated service running at 127.0.0.1:8770 with queue resumed."
     ]
+  },
+  {
+    "id": "LF-32",
+    "title": "Automatically reload published previews without losing review context",
+    "status": "done",
+    "depends_on": [
+      "LF-31"
+    ],
+    "acceptance": [
+      "Follow published revisions while preserving scene and scroll.",
+      "Defer reload during annotation editing or pending delivery; historical links remain pinned."
+    ],
+    "evidence": [
+      "live-reload.mjs follows publication with scene/scroll restoration, editor and outbox guards, and pinned historical links. Three Node/DOM regression tests pass. Built bundle verified byte-for-byte over the running HTTP server. Actual browser interaction remains unverified; existing tabs need one refresh."
+    ]
   }
 ]

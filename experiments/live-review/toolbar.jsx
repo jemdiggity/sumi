@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Agentation } from "agentation";
+import { installLiveReload } from "./live-reload.mjs";
 const config = window.SUMI_REVIEW;
 const container = document.createElement("div");
 container.dataset.agentationIgnore = "";
@@ -9,12 +10,31 @@ const panel = document.createElement("aside");
 panel.dataset.agentationIgnore = "";
 document.body.append(panel);
 const shadow = panel.attachShadow({ mode: "open" });
-shadow.innerHTML = `<style>:host{position:fixed;left:16px;bottom:16px;z-index:99997;font:13px/1.45 system-ui;color:#eee}details{background:#171d2b;border:1px solid #4b5263;border-radius:12px;box-shadow:0 8px 30px #0007;max-width:min(380px,85vw)}summary{cursor:pointer;padding:12px 16px;font-weight:600}section{padding:0 16px 14px;max-height:42vh;overflow:auto}p{margin:8px 0;color:#bfc7d5}button,a{color:#ffcd83}button{background:#283145;border:1px solid #576278;border-radius:6px;padding:6px 10px;cursor:pointer}article{padding:10px 0;border-top:1px solid #3d4556;white-space:pre-wrap}small{display:block;color:#bfc7d5}#latest{display:none;background:#efb35b;color:#151a23;padding:10px 15px;border-radius:8px;margin-bottom:8px;font-weight:650;text-decoration:none}</style><a id="latest" href="/">New revision ready →</a><details open><summary id="summary">Luna pool · connecting</summary><section><p>Click the annotation button at bottom right, select something, and save a comment. Saving sends it to a Luna immediately. Edits create another job.</p><p id="network"></p><div><button id="pause">Pause new work</button> <a href="/api/export" target="_blank">History</a></div><div id="jobs"></div></section></details>`;
+shadow.innerHTML = `<style>:host{position:fixed;left:16px;bottom:16px;z-index:99997;font:13px/1.45 system-ui;color:#eee}details{background:#171d2b;border:1px solid #4b5263;border-radius:12px;box-shadow:0 8px 30px #0007;max-width:min(380px,85vw)}summary{cursor:pointer;padding:12px 16px;font-weight:600}section{padding:0 16px 14px;max-height:42vh;overflow:auto}p{margin:8px 0;color:#bfc7d5}button,a{color:#ffcd83}button{background:#283145;border:1px solid #576278;border-radius:6px;padding:6px 10px;cursor:pointer}article{padding:10px 0;border-top:1px solid #3d4556;white-space:pre-wrap}small{display:block;color:#bfc7d5}#latest{display:none;background:#efb35b;color:#151a23;padding:10px 15px;border-radius:8px;margin-bottom:8px;font-weight:650;text-decoration:none}</style><a id="latest" href="/">New revision ready →</a><details open><summary id="summary">Luna pool · connecting</summary><section><p>Click the annotation button at bottom right, select something, and save a comment. Saving sends it to a Luna immediately. Edits create another job.</p><p id="network"></p><p id="live-status"></p><button id="live">Live updates: on</button><div><button id="pause">Pause new work</button> <a href="/api/export" target="_blank">History</a></div><div id="jobs"></div></section></details>`;
 const $ = (s) => shadow.querySelector(s);
 const key = "sumi-bebop-outbox";
 let outbox = JSON.parse(localStorage.getItem(key) || "[]"),
   sending = false,
   last = "";
+try {
+  const scene = new URLSearchParams(location.search).get("scene");
+  if (scene) window.BebopScene?.set?.(JSON.parse(scene));
+} catch {}
+const live = installLiveReload(window, {
+  revision: config.revision,
+  pending: () => sending || outbox.length > 0,
+  panel: $("details"),
+  status: $("#live-status"),
+});
+const showLive = () => {
+  $("#live").textContent = `Live updates: ${live.enabled ? "on" : "off"}`;
+};
+showLive();
+$("#live").onclick = () => {
+  live.toggle();
+  showLive();
+  void poll();
+};
 function persist() {
   localStorage.setItem(key, JSON.stringify(outbox));
 }
@@ -103,7 +123,8 @@ async function poll() {
       : `Viewing revision ${config.revision.slice(0, 8)} · connected`;
     const latest = $("#latest");
     latest.style.display = data.revision !== config.revision ? "block" : "none";
-    latest.href = "/r/" + data.revision + "/";
+    latest.href = "/r/" + data.revision + "/?live=1";
+    live.update(data.revision);
     const fingerprint = JSON.stringify(data.jobs);
     if (last !== fingerprint) {
       last = fingerprint;
@@ -124,7 +145,7 @@ async function poll() {
         }
         if (job.published) {
           const link = document.createElement("a");
-          link.href = "/r/" + job.published + "/";
+          link.href = "/r/" + job.published + "/?live=0";
           link.textContent = "View proposed revision →";
           article.append(link);
         }
@@ -132,7 +153,7 @@ async function poll() {
         original.href =
           "/r/" +
           job.revision +
-          "/?scene=" +
+          "/?live=0&scene=" +
           encodeURIComponent(JSON.stringify(job.scene || {}));
         original.textContent = " Original";
         article.append(original);
@@ -149,7 +170,3 @@ async function tick() {
   setTimeout(tick, 1500);
 }
 void tick();
-try {
-  const scene = new URLSearchParams(location.search).get("scene");
-  if (scene) window.BebopScene?.set?.(JSON.parse(scene));
-} catch {}
