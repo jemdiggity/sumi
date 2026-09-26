@@ -625,7 +625,7 @@
   {
     "id": "LF-37",
     "title": "Launch Sumi workspaces and share agent skills",
-    "status": "blocked",
+    "status": "done",
     "depends_on": [],
     "acceptance": [
       "Run sumi to launch the project layout with saved mux preference.",
@@ -633,8 +633,8 @@
       "Install bundled skills for Codex and Claude without overwriting personal skills."
     ],
     "evidence": [
-      "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md."
-    ],
-    "blocked_reason": "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md."
+      "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md.",
+      "Native cmux verified live after user-approved local automation mode. Two launches reused one workspace with six panes/eight surfaces; Tasks and Agent sessions rendered correctly. Config backed up and validated. Actual Sumi native workspace opened; default remains Zellij. See docs/CLI-LAUNCHER.md."
+    ]
   }
 ]

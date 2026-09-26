@@ -15,12 +15,18 @@
 - 27 tests passed, including config persistence, command quoting, skill collisions,
   native app layout construction/reuse/access-denial handling, and existing runner tests.
 
-Native cmux's installed CLI confirms the supported `new-workspace --layout` schema.
-The native layout adapter has automated contract tests, but live creation is still
-unverified: the app currently rejects socket clients not descended from cmux.
-The computer-control connection also failed to start. Sumi reports this restriction
-and does not change the access setting. Live verification requires running Sumi
-inside cmux or enabling its local automation access with user approval.
+Native cmux live verification also passed after the user approved enabling
+`automation.socketControlMode: "automation"` in `~/.config/cmux/cmux.json`.
+The previous JSONC file was backed up alongside it before the change. The file
+watcher applied the setting without restarting the app; `cmux config doctor`
+confirmed valid JSONC.
+
+Two launches created exactly one native workspace with six panes and eight
+surfaces, including three artifact tabs. Screen capture confirmed that Tasks
+read the smoke project's empty queue and Agent sessions rendered its labelled
+recorded-run view. The test workspace was then closed. A native workspace for
+the actual Sumi project was opened for the user; their saved default remains
+Zellij.
 
 This slice launches workspace layouts. Managed agent-run adapters and native
 pane activity detection remain Zellij-only; other layouts explicitly label their
