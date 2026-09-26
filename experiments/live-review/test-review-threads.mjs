@@ -88,6 +88,12 @@ try {
   await pin.waitFor();
   assert.equal(await card.getAttribute("open"), "");
   await card.getByRole("button", { name: "Reopen", exact: true }).click();
+  await page.waitForTimeout(1800);
+  assert.equal(await pin.isVisible(), true);
+  assert.equal(
+    await pin.evaluate((e) => getComputedStyle(e).backgroundColor),
+    "rgb(226, 167, 70)",
+  );
   const reply = card.getByRole("textbox", { name: "Reply to review comment" });
   await reply.fill("Still too bright. Use a muted green.");
   await page.locator("h1").click();
@@ -118,7 +124,13 @@ try {
     true,
   );
   await page.locator("#target").evaluate((el) => el.remove());
-  await pin.waitFor({ state: "hidden" });
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("*")].some((e) =>
+      e.shadowRoot?.querySelector('button[data-placement="unplaced"]'),
+    ),
+  );
+  assert.equal(await pin.isVisible(), true);
+  await pin.click();
   assert.match(await card.locator(".thread-anchor").innerText(), /unavailable/);
   assert.equal(
     await card
@@ -126,6 +138,28 @@ try {
       .getAttribute("href"),
     "/r/" + "a".repeat(40) + "/?live=0&scene=%7B%7D",
   );
+  // Repeated selectors resolve by captured text; changing scenes keeps a rail pin.
+  thread.annotation = {
+    fullPath: ".repeated",
+    nearbyText: '[before: "Other"] Wanted',
+  };
+  await page.evaluate(() => {
+    for (const text of ["Other", "Wanted"]) {
+      const b = document.createElement("button");
+      b.className = "repeated";
+      b.textContent = text;
+      document.body.append(b);
+    }
+  });
+  await page.waitForTimeout(1800);
+  assert.equal(await pin.getAttribute("data-placement"), "anchored");
+  thread.scene = { conversation: "original-chat" };
+  await page.waitForTimeout(1800);
+  assert.equal(await pin.getAttribute("data-placement"), "unplaced");
+  assert.equal(await pin.isVisible(), true);
+  await page.reload();
+  await pin.waitFor();
+  assert.equal(await pin.getAttribute("data-placement"), "unplaced");
   assert.deepEqual(errors, []);
   console.log(
     "PASS sticky pins, review colors, acceptance/reopen, refresh/drafts, reply delivery, revision transition, missing-anchor fallback",
