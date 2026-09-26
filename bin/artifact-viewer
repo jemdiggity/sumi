@@ -6,10 +6,10 @@ import shlex
 import subprocess
 import sys
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get('SUMI_ROOT', Path(__file__).resolve().parent.parent))
 DEMO = ROOT / '.playground/demo'
-REPO = DEMO if (DEMO / '.git').exists() else ROOT
-SOCKET = 'sumi-artifact-viewer'
+REPO = ROOT if os.environ.get('SUMI_ROOT') else (DEMO if (DEMO / '.git').exists() else ROOT)
+SOCKET = os.environ.get('SUMI_SESSION', 'sumi') + '-artifacts'
 env = dict(os.environ)
 env.pop('TMUX', None)
 
@@ -19,7 +19,9 @@ def mux(*args, check=True):
 mode = sys.argv[1] if len(sys.argv) > 1 else 'open'
 if mode == 'markdown':
     os.environ['PAGER'] = 'less -R'
-    document = DEMO / 'WORKSPACE.md' if (DEMO / 'WORKSPACE.md').exists() else ROOT / 'docs/WORKSPACE.md'
+    document = next((p for p in [ROOT / 'docs/WORKSPACE.md', ROOT / 'README.md'] if p.exists()), None)
+    if document is None:
+        sys.exit('No README.md or docs/WORKSPACE.md in this project yet.')
     os.execvp('glow', ['glow', '-p', '-w', '96', str(document)])
 elif mode in ('terminal', 'edit'):
     os.chdir(ROOT)

@@ -621,5 +621,20 @@
       "Eleven pool tests pass, including reply idempotency, history, restart, acceptance, and scheduling. Browser bundle test passes refresh/revision continuity, blue/green colors, acceptance/reopen, active annotation mode controls, reply delivery, draft retention, and missing-anchor fallback.",
       "Native follow-up e8b3cdd584eb on coordinator canary thread cf9d94ec8fd3 received history and correctly recalled LAB / 01 \u2192 CHAT / 01 without editing. Worker returned already_satisfied, conservatively displayed needs attention; no reviewer acceptance fabricated. Live migrated thread inspected visually."
     ]
+  },
+  {
+    "id": "LF-37",
+    "title": "Launch Sumi workspaces and share agent skills",
+    "status": "blocked",
+    "depends_on": [],
+    "acceptance": [
+      "Run sumi to launch the project layout with saved mux preference.",
+      "Support Zellij, tmux, cmux CLI, and native cmux app.",
+      "Install bundled skills for Codex and Claude without overwriting personal skills."
+    ],
+    "evidence": [
+      "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md."
+    ],
+    "blocked_reason": "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md."
   }
 ]

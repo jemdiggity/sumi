@@ -337,9 +337,12 @@ class Factory:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, help='Canonical project checkout (auto-detected from Git)')
-    parser.add_argument('--session', default='sumi-zellij')
-    parser.add_argument('--mux', default='zellij', help='Workspace backend (currently zellij; other adapters are planned)')
-    sub = parser.add_subparsers(dest='action', required=True)
+    parser.add_argument('--session')
+    parser.add_argument('--mux', choices=['zellij', 'tmux', 'cmux', 'cmux-app'], help='Workspace UI (default: saved preference or zellij)')
+    parser.add_argument('--detach', action='store_true', help='Create the workspace without attaching')
+    sub = parser.add_subparsers(dest='action')
+    from sumi_cli import add_commands, handle
+    add_commands(sub)
     p = sub.add_parser('prepare', help='Reserve a task and create its worktree')
     p.add_argument('task_id')
     p.add_argument('--agent', choices=['codex'], default='codex')
@@ -368,6 +371,11 @@ def main():
     p.add_argument('--evidence', required=True)
     args = parser.parse_args()
     try:
+        if handle(args):
+            return
+        args.session = args.session or (os.environ.get('SUMI_SESSION')
+                                       if os.environ.get('SUMI_MUX', 'zellij') == 'zellij' else None) or 'sumi-zellij'
+        args.mux = args.mux or 'zellij'
         root = args.root or Path(command(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])).parent
         factory = Factory(root, args.session, args.mux)
         if args.action in ('activity', 'tail', 'peek'):

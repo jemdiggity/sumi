@@ -1,10 +1,11 @@
 """Read-only, live task views shared by terminal multiplexers."""
 import curses
 import json
+import os
 from pathlib import Path
 import textwrap
 
-TASKS = Path(__file__).resolve().parent.parent / '.sumi/tasks.json'
+TASKS = Path(os.environ.get('SUMI_ROOT', Path(__file__).resolve().parent.parent)) / '.sumi/tasks.json'
 CLOSED = {'done', 'superseded'}
 
 

@@ -7,7 +7,7 @@ with_codex=0
 mode=install
 usage() {
   cat <<'EOF'
-Usage: ./setup.sh [--mux zellij|tmux|cmux|none] [--with-codex] [--check|--dry-run]
+Usage: ./setup.sh [--mux zellij|tmux|cmux|cmux-app|none] [--with-codex] [--check|--dry-run]
 
 Installs missing dependencies using Homebrew on macOS, Linux, or WSL.
 Core: Python 3.10+ with curses, Git, Glow, Delta, Neovim, less.
@@ -16,7 +16,9 @@ Select a mux explicitly; none installs just the shared tools.
 --check reports missing tools without installing anything (exit 1 if missing).
 --dry-run prints install commands without changing anything.
 
-cmux installs the native macOS application, not the experimental cmux TUI.
+cmux-app installs the native macOS application. On macOS, cmux also installs
+that app to obtain its bundled terminal cmux CLI. On Linux, install the cmux TUI
+release separately and put cmux-tui on PATH.
 Managed agent runs currently have a Zellij adapter only. Mux parity is a
 separate slice; installing a mux does not imply runner support for it.
 EOF
@@ -31,10 +33,10 @@ while (($#)); do
     *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
   esac
 done
-case "$mux" in zellij|tmux|cmux|none) ;; *) echo "Unknown mux: $mux" >&2; exit 2 ;; esac
+case "$mux" in zellij|tmux|cmux|cmux-app|none) ;; *) echo "Unknown mux: $mux" >&2; exit 2 ;; esac
 os=$(uname -s)
 case "$os" in Darwin|Linux) ;; *) echo 'Use macOS, Linux, or WSL for this setup slice.' >&2; exit 2 ;; esac
-if [[ "$mux" == cmux && "$os" != Darwin ]]; then
+if [[ "$mux" == cmux-app && "$os" != Darwin ]]; then
   echo 'The native cmux application profile requires macOS; choose tmux, zellij, or none.' >&2
   exit 2
 fi
@@ -61,6 +63,15 @@ case "$mux" in
   zellij) need zellij zellij ;;
   tmux) need tmux tmux ;;
   cmux)
+    if [[ "$os" == Darwin ]]; then
+      if [[ ! -x /Applications/cmux.app/Contents/Resources/bin/cmux-tui && ! -x "$HOME/Applications/cmux.app/Contents/Resources/bin/cmux-tui" ]] && ! command -v cmux-tui >/dev/null 2>&1; then
+        echo 'Missing: cmux TUI'; casks+=(cmux)
+      fi
+    elif ! command -v cmux-tui >/dev/null 2>&1; then
+      echo 'Install the cmux TUI release and put cmux-tui on PATH, then rerun setup.' >&2
+      exit 2
+    fi ;;
+  cmux-app)
     # Do not mistake a different executable named cmux (the TUI) for the app.
     if [[ ! -d /Applications/cmux.app && ! -d "$HOME/Applications/cmux.app" ]]; then
       echo 'Missing: native cmux.app'; casks+=(cmux)
@@ -101,10 +112,12 @@ if [[ "$mode" == dry-run ]]; then
 fi
 echo 'Selected dependencies are available.'
 case "$mux" in
-  zellij) echo 'Start the workspace: bin/zellij-playground' ;;
-  tmux) echo 'Start the workspace: bin/playground attach' ;;
-  cmux) echo 'Open cmux.app and a terminal in this checkout. The managed cmux runner adapter is a future slice.' ;;
+  zellij) echo 'Start the workspace: bin/sumi --mux zellij' ;;
+  tmux) echo 'Start the workspace: bin/sumi --mux tmux' ;;
+  cmux|cmux-app) echo "Start the workspace: bin/sumi --mux $mux" ;;
   none) echo 'Choose a UI later with --mux tmux, --mux zellij, or --mux cmux.' ;;
 esac
 if [[ "$with_codex" == 1 ]]; then echo 'Authenticate when ready: codex login'; fi
 echo 'Optional: CodexBar for quota display; Radicle/Forgejo for the separate collaboration lab.'
+
+echo 'Install the command: bin/sumi install; share agent skills: bin/sumi skills install'

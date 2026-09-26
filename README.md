@@ -2,6 +2,63 @@
 
 A lean software factory assembled from existing tools and composable agent skills.
 
+## Run Sumi
+
+```sh
+./setup.sh --mux zellij
+./bin/sumi install             # links ~/.local/bin/sumi; keep this checkout
+sumi skills install           # shared skills for Codex and Claude
+cd /path/to/your/project
+sumi                          # opens the layout; Zellij is the initial default
+```
+
+Sumi opens Tasks and Agent sessions on the left, a shell in the center, and
+Markdown / Diff / Terminal, CPU, and weekly allowance on the right. Run `codex`
+or `claude` in the center shell. The project gets `.sumi/tasks.json` if absent;
+existing task data is never reset. Existing workspaces are reused without
+replacing their panes. Different project paths get different sessions.
+
+```sh
+sumi --mux tmux               # launch and remember this choice
+sumi --mux cmux               # terminal cmux CLI/TUI
+sumi --mux cmux-app           # native macOS cmux app
+sumi config --mux zellij      # save the default without opening a workspace
+sumi config                  # inspect ~/.sumi/config.json
+sumi --root /path/to/repo --detach  # create without attaching
+sumi skills list
+sumi skills install --agent claude --scope project
+```
+
+Global launch options precede the subcommand (`sumi --mux tmux open`); bare
+`sumi` is equivalent to `sumi open`. Preferences live in `~/.sumi/config.json`;
+`SUMI_HOME` can override this for testing. The optional `executables` object maps
+`zellij`, `tmux`, `cmux`, or `cmux-app` to absolute executable paths. cmux CLI and
+the app CLI are different executables; Sumi checks the CLI before using it.
+On macOS the native app also bundles `Contents/Resources/bin/cmux-tui`.
+
+The native app must allow your calling terminal to use its automation socket.
+Its default restriction may require launching Sumi from inside cmux. Sumi reports
+that restriction without changing it. Other missing dependencies are reported;
+run `setup.sh` to install them. Optional quota tooling can be unavailable and the
+usage pane will report that explicitly. tmux uses an isolated server and Ctrl+G
+prefix; F1/F2/F3 switch its artifact tabs. Zellij uses its native stacked panes;
+both cmux versions use native artifact tabs.
+
+The four layouts launch shells and shared tools. Managed `sumi prepare/start`
+agent workspaces and native busy detection currently support **Zellij**; the other
+muxes' Agent sessions pane shows recorded runs, explicitly labelled as such.
+
+Skill installation links the four `skills/` folders into `~/.agents/skills` for
+Codex and `~/.claude/skills` for Claude; `--scope project` uses those directories
+inside the selected project. Updates in this checkout stay in sync. Existing
+personal skills are preserved; conflicting installs fail before writing links.
+Identical legacy `~/.codex/skills` copies are backed up under
+`~/.sumi/skill-backups/` to avoid duplicates. Start a new agent session after
+installing. These locations follow the official
+[Codex skill documentation](https://learn.chatgpt.com/docs/build-skills) and
+[Claude skill documentation](https://code.claude.com/docs/en/skills).
+
+
 Clone setup (macOS, Linux, or WSL with Homebrew):
 
 ```sh
@@ -25,8 +82,8 @@ and tools. `bin/sumi` now prepares isolated worktrees and launches parallel Code
 runs through Zellij. The earlier HTML proposal is one design artifact, not a
 prerequisite for these explicitly requested workspace experiments.
 
-The `skills/` directory versions the factory skill drafts installed under
-`~/.codex/skills/`. Keep those working copies synchronized when revising skills.
+The `skills/` directory versions the factory skills. `sumi skills install` links
+them into agent discovery directories so changes stay synchronized.
 `docs/WORKSPACE.md` preserves the proposal shown in the disposable demo repository.
 The runtime state under `.playground/` is local and is not committed.
 

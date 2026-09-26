@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Run one shared Sumi pane in the selected project."""
+import os
+from pathlib import Path
+import sys
+
+TOOLS = Path(__file__).resolve().parent.parent
+root = Path(os.environ['SUMI_ROOT'])
+os.chdir(root)
+role = sys.argv[1]
+if role == 'shell':
+    shell = os.environ.get('SHELL', '/bin/sh')
+    os.execv(shell, [shell, '-l'])
+elif role == 'cpu':
+    args = ['top', '-s', '2', '-n', '0'] if sys.platform == 'darwin' else ['top', '-b', '-d', '2']
+elif role == 'tasks':
+    args = [sys.executable, str(TOOLS / 'bin/task-list')]
+elif role == 'sessions':
+    args = [sys.executable, str(TOOLS / 'bin/session-list'), '--session', os.environ['SUMI_SESSION']]
+elif role == 'usage':
+    args = [str(TOOLS / 'bin/usage-monitor')]
+else:
+    args = [sys.executable, str(TOOLS / 'bin/artifact-viewer'), role]
+os.execvp(args[0], args)

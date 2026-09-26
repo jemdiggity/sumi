@@ -12,8 +12,9 @@ import sys
 import threading
 import time
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / 'lib'))
+TOOLS = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get('SUMI_ROOT', TOOLS))
+sys.path.insert(0, str(TOOLS / 'lib'))
 from agent_activity import CODEX_BUSY_REGEX, CODEX_IDLE_REGEX, pane_activity, run_activity
 from sumi_runner import leased
 
@@ -73,11 +74,12 @@ def provider(command):
 class Sessions:
     def __init__(self, session):
         self.session, self.watches = session, {}
+        self.mux = os.environ.get('SUMI_MUX', 'zellij')
 
     def rows(self):
         raw = subprocess.check_output(
             ['zellij', '--session', self.session, 'action', 'list-panes', '--json'],
-            text=True, stderr=subprocess.DEVNULL, timeout=3)
+            text=True, stderr=subprocess.DEVNULL, timeout=3) if self.mux == 'zellij' else '[]'
         panes = json.loads(raw)
         runs = []
         records = list((ROOT / '.playground/runs').glob('*/run.json'))
@@ -149,6 +151,8 @@ def display(screen, sessions):
         try:
             active, recent = sessions.rows()
             lines = [f'AGENT SESSIONS ({len(active)} active)', '']
+            if sessions.mux != 'zellij':
+                lines += ['Recorded runs only', '(native pane detection: Zellij)', '']
             for label, state, identity in active:
                 lines += [f'{state.upper():12} {label}', f'  {identity}']
             if not active:
