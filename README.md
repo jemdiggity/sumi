@@ -30,7 +30,7 @@ The `skills/` directory versions the factory skill drafts installed under
 `docs/WORKSPACE.md` preserves the proposal shown in the disposable demo repository.
 The runtime state under `.playground/` is local and is not committed.
 
-To process the queue, ask an agent to use `factory-orchestrator` with `tasks.json`.
+To process the queue, ask an agent to use `factory-orchestrator` with `.sumi/tasks.json`.
 For example: "Use factory-orchestrator to work through the design tasks, iterating
 with me on the mockup before implementation." The skill selects eligible work,
 uses the other factory skills, and records progress in the task file. It runs in
@@ -163,7 +163,7 @@ quota remaining, not API billing totals.
 ## cmux comparison
 
 A separate Ghostty tab hosts the native Apple Silicon **cmux TUI** binary, with
-an isolated `sumi-cmux` session. It shares tasks.json and the demo artifacts with
+an isolated `sumi-cmux` session. It shares .sumi/tasks.json and the demo artifacts with
 tmux but uses its own processes. One coordinator writes task state.
 
 ```sh
@@ -220,21 +220,26 @@ Radicle configuration is untouched.
 
 ## First experiments
 
-The left sidebar shows workspace task records from the versionable `tasks.json`,
+The left sidebar shows workspace task records from the versionable `.sumi/tasks.json`,
 a JSON list with stable IDs, titles, statuses, dependencies, acceptance criteria,
 and optional recursive `children`. Nesting groups work; `depends_on` specifies
-execution ordering independently. The pane refreshes every second; j/k or arrows
-scroll, and g/G jump to the start/end. No demo Radicle issues are imported as real
-tasks. The header shows executing leaf task IDs; active entries are bold and
-marked `>`. The orchestrator writes status changes before starting work and after
-each outcome. `bin/playground tasks` adds the
+execution ordering independently. The pane reloads `.sumi/tasks.json` every second,
+including atomic saves. Its fixed header counts **open** and **closed** records
+(including parent tasks). Open includes proposed, ready, active, and blocked;
+closed includes done and superseded. The **Open** view puts active tasks first,
+in bold with `>`, while **Done** keeps closed tasks separate. Tab or left/right
+switches views; 1/2 selects Open/Done. j/k or arrows scroll, Page Up/Down pages,
+and g/G jumps to the start/end. Counters and controls remain visible while scrolling.
+Invalid saves show an error and retain the last good list until corrected.
+No demo Radicle issues are imported as real tasks. The orchestrator writes
+status changes before starting work and after each outcome. `bin/playground tasks` adds the
 sidebar to a running workspace, and start/attach also ensure it exists.
 
 The current upper-right pane runs `bin/artifact-viewer`, a nested tmux session
 with Markdown (Glow), Diff (Delta), and Terminal tabs. Click a tab or use F1/F2/F3
 while that pane is focused; F5 refreshes Markdown or Diff and is passed through
 to the terminal without restarting its process. The terminal starts in the project
-root: run `nvim tasks.json` or `nvim .playground/demo/WORKSPACE.md`, then `:q` returns
+root: run `nvim .sumi/tasks.json` or `nvim .playground/demo/WORKSPACE.md`, then `:q` returns
 to the shell. Save edits with `:w`, then refresh the other views to see them.
 On a Mac, function keys may need
 Fn. The diff includes tracked changes against HEAD and untracked files in the

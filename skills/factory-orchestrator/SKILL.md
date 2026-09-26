@@ -12,7 +12,7 @@ serially in the current session. Do not spawn workers merely because tasks exist
 ## Locate and reconcile state
 
 Use the task source named by the user or project. In the Sumi playground it is
-`tasks.json` at the repository root. Read it and relevant project instructions
+`.sumi/tasks.json` inside the repository. Read it and relevant project instructions
 before acting. Use factory-workflow for planning and replanning, factory-design
 for representative artifacts, and factory-feedback for revision-specific review
 when these skills are available. Read only those needed for the selected task.
@@ -74,7 +74,7 @@ Prepare eligible tasks, start returned run IDs, and inspect the resulting runs.
 Run IDs, Codex conversation IDs, task IDs, and workspace IDs are distinct.
 
 While Sumi workers are live, use `bin/sumi task` for coordinator outcomes rather
-than directly rewriting tasks.json; direct edits bypass its writer lock. Workers
+than directly rewriting .sumi/tasks.json; direct edits bypass its writer lock. Workers
 must not edit the canonical queue. An exited run leaves the task blocked for
 review, not done. Review its actual worktree changes, result, and validation
 before recording acceptance. Do not merge merely because a worker exited.

@@ -6,7 +6,7 @@ the two explicitly authorized Codex workers performed review and documentation.
 
 | Task | Delivery | Implementation / evidence |
 | --- | --- | --- |
-| LF-7 durable task state | Implemented, then credited retrospectively from LF-15's parallel-run slice. | `tasks.json`, `lib/sumi_runner.py`, `tests/test_runner.py`; initial implementation `b51c434`, recovery hardening `c6f4f8a`. |
+| LF-7 durable task state | Implemented, then credited retrospectively from LF-15's parallel-run slice. | `.sumi/tasks.json`, `lib/sumi_runner.py`, `tests/test_runner.py`; initial implementation `b51c434`, recovery hardening `c6f4f8a`. |
 | LF-8 native handoff | Implemented and exercised with two real Codex workers. Also credited retrospectively from LF-15. | `bin/sumi` prepare/start/inspect/resume; separate Git worktrees and Zellij tabs. LF-17 reviewed the runner; LF-18 wrote documentation and resumed its exact conversation. |
 | LF-9 Radicle round-trip | Manual integration experiment, not an importer/service. | Coordinator copied the actual LF-17 review into a private local Radicle issue, posted its technical disposition locally, retrieved JSON, and checked bodies/reply anchors. See `docs/RADICLE-FEEDBACK.md`; recorded in `aeb6874`. |
 | LF-10 self-improvement | Workflow exercise resulting in a concrete child task, LF-20. | Coordinator replaced repeated pane polling with native Zellij subscription in `peek --follow`, cropped the viewport locally, and verified initial delivery and subscriber cleanup. Implemented in `aeb6874`. |

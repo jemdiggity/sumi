@@ -22,7 +22,7 @@ class RunnerTest(unittest.TestCase):
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
         self.tasks = [dict(id=k, title=k, status='ready', depends_on=[],
                            acceptance=['Produce a result'], evidence=[]) for k in ('A', 'B')]
-        atomic_json(self.root / 'tasks.json', self.tasks)
+        atomic_json(self.root / '.sumi/tasks.json', self.tasks)
         self.git('add', '.')
         self.git('-c', 'user.name=Test', '-c', 'user.email=test@localhost', 'commit', '-qm', 'Seed')
         self.factory = Factory(self.root)

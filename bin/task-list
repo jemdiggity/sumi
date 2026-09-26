@@ -1,81 +1,11 @@
 #!/usr/bin/env python3
-"""Read-only task sidebar; reload local task state once per second."""
+"""Live task sidebar: open and completed tasks from .sumi/tasks.json."""
 import curses
-import json
 from pathlib import Path
-import textwrap
+import sys
 
-TASKS = Path(__file__).resolve().parent.parent / 'tasks.json'
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'lib'))
+from task_view import display
 
-def flatten(tasks, depth=0):
-    if not isinstance(tasks, list):
-        raise ValueError('Expected a list of tasks')
-    for task in tasks:
-        if not isinstance(task, dict) or not isinstance(task.get('title'), str):
-            raise ValueError('Each task needs a title')
-        yield task, depth
-        yield from flatten(task.get('children', []), depth + 1)
-
-def display(screen):
-    try:
-        curses.curs_set(0)
-    except curses.error:
-        pass
-    screen.timeout(1000)
-    offset = 0
-    while True:
-        height, width = screen.getmaxyx()
-        content_width = max(1, width - 4)
-        try:
-            tasks = json.loads(TASKS.read_text()) if TASKS.exists() else []
-            entries = list(flatten(tasks))
-            active = [str(t.get('id', '?')) for t, _ in entries
-                      if t.get('status') == 'active' and not t.get('children')]
-            active_label = 'Working: ' + (', '.join(active) if active else 'none')
-            active_label = ''.join(c for c in active_label if c.isprintable())
-            lines = [f'TASKS ({len(entries)})'] + textwrap.wrap(active_label, content_width)
-            lines += ['─' * content_width, '']
-            highlights = set(range(len(lines) - 2))
-            if not tasks:
-                lines += ['No tasks yet.']
-            for task, depth in entries:
-                title = ''.join(c for c in task['title'] if c.isprintable())
-                status = ''.join(c for c in str(task.get('status', 'proposed')) if c.isprintable())
-                indent = '  ' * min(depth, max(0, (content_width - 8) // 2))
-                label = str(task.get('id', ''))
-                label = ''.join(c for c in label if c.isprintable())
-                start_line = len(lines)
-                if status == 'active':
-                    label = '> ' + label
-                lines += textwrap.wrap(f'{label} {title}'.strip(), content_width,
-                                       initial_indent=indent, subsequent_indent=indent)
-                lines += textwrap.wrap(status, content_width,
-                                       initial_indent=indent, subsequent_indent=indent) + ['']
-                if status == 'active':
-                    highlights.update(range(start_line, len(lines) - 1))
-        except (OSError, ValueError) as error:
-            highlights = {0}
-            lines = ['TASKS', '', 'Cannot read task list.']
-            lines += textwrap.wrap(str(error), content_width)
-        screen.erase()
-        offset = min(offset, max(0, len(lines) - max(1, height - 1)))
-        for row, line in enumerate(lines[offset:offset + max(0, height - 1)]):
-            try:
-                screen.addnstr(row, 1, line, max(0, width - 2),
-                               curses.A_BOLD if row + offset in highlights else curses.A_NORMAL)
-            except curses.error:
-                pass
-        screen.refresh()
-        key = screen.getch()
-        if key in (ord('q'), 27):
-            return
-        if key in (ord('j'), curses.KEY_DOWN):
-            offset += 1
-        elif key in (ord('k'), curses.KEY_UP):
-            offset = max(0, offset - 1)
-        elif key in (ord('g'), curses.KEY_HOME):
-            offset = 0
-        elif key in (ord('G'), curses.KEY_END):
-            offset = len(lines)
-
-curses.wrapper(display)
+if __name__ == '__main__':
+    curses.wrapper(display)

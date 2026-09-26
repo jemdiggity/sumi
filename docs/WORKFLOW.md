@@ -14,7 +14,7 @@ revising the task plan as evidence arrives. Jeremy confirmed both aspects.
 
 ## Current task source
 
-`../tasks.json` is now the source of truth for the real task tree displayed in
+`../.sumi/tasks.json` is now the source of truth for the real task tree displayed in
 the sidebar. LF-1 groups iterative design and stakeholder agreement (LF-2–LF-5).
 LF-6 groups the subsequent prototypes and self-improvement loop (LF-7–LF-10).
 The initial template is product-discovery@2, followed by engineering-exploration@2.
@@ -26,7 +26,7 @@ No implementation approval or running worker agent is implied.
 
 The W-series below records earlier skill-development work and candidate experiments;
 it is historical context, not a second task queue. W02/W03 are now represented by
-LF-4/LF-5/LF-9, and W04 by LF-10. Keep operational status in tasks.json.
+LF-4/LF-5/LF-9, and W04 by LF-10. Keep operational status in .sumi/tasks.json.
 
 | ID | Result | Status | Dependencies | Evidence |
 | --- | --- | --- | --- | --- |

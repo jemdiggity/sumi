@@ -35,7 +35,7 @@ agreement; exact implementation tasks should be refined from the reviewed artifa
 - Is this first slice useful enough, or should another interaction come first?
 - What should change in the proposal before it becomes the build reference?
 
-Approval can be recorded later against the hashes in tasks.json. Reviewing or
+Approval can be recorded later against the hashes in .sumi/tasks.json. Reviewing or
 clicking the mockup does not by itself authorize implementation.
 
 ## Validation and limits
@@ -46,7 +46,7 @@ empty/failed/completed states, and reset. JavaScript syntax and local HTTP servi
 were checked. Browser automation was unavailable, so visual layout has not yet
 been verified in a real browser.
 
-Comments and agreement are in-memory demo data. The mockup does not write tasks.json.
+Comments and agreement are in-memory demo data. The mockup does not write .sumi/tasks.json.
 Live task state remains in that JSON file and is shared by the tmux and cmux views.
 
 ## Evidence from using the workspace

@@ -99,7 +99,7 @@ class Factory:
         self.root = Path(root).resolve()
         self.state = self.root / '.playground/runs'
         self.state.mkdir(parents=True, exist_ok=True)
-        self.tasks = self.root / 'tasks.json'
+        self.tasks = self.root / '.sumi/tasks.json'
         self.session = session
         self.mux = mux
         get_mux(mux, session)  # reject unavailable backends before reserving tasks
@@ -192,7 +192,7 @@ class Factory:
                 prompt = (f'Task {task_id}: {task["title"]}\n\nAcceptance:\n' +
                           '\n'.join('- ' + a for a in task['acceptance']) +
                           '\n\nWork only in this worktree and on this task. Do not change branches, merge, '
-                          'push, launch other agents, or modify tasks.json or shared orchestration state. '
+                          'push, launch other agents, or modify .sumi/tasks.json or shared orchestration state. '
                           'Other workers are running in separate worktrees. Leave changes uncommitted for '
                           'coordinator review. Report changed files, validation, and unresolved issues.\n')
                 if followup:

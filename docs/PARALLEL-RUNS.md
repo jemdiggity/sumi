@@ -89,7 +89,7 @@ nonzero exit, lost worker detection, and preparation of a resumed attempt.
 `bin/sumi` controls durable run records under `.playground/runs/`, with one
 advisory lock for run/task mutations and an independent lifetime lease for each
 worker. Use the CLI for task outcomes while workers run; direct edits to
-`tasks.json` do not participate in this lock. Run records are saved before task
+`.sumi/tasks.json` do not participate in this lock. Run records are saved before task
 status projection; `runs`/`inspect` re-project it after a partial write failure.
 
 Agent panes run native `codex exec --json` and display messages/commands. Raw
@@ -130,7 +130,7 @@ Review disposition:
 - Startup without a captured session: the existing `task --status ready` then
   `prepare` recovery path works; now covered by a regression test. `resume`
   deliberately refuses to guess a conversation ID.
-- Unlocked external edits to tasks.json: outside the supported writer protocol;
+- Unlocked external edits to .sumi/tasks.json: outside the supported writer protocol;
   documented and routed through the locked CLI in the orchestrator skill.
 - Queue metadata newer than the code commit: intentional; clarified the prompt
   snapshot as authoritative. Code starts from the recorded commit.
