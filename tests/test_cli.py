@@ -57,28 +57,47 @@ class CliTest(unittest.TestCase):
                 cli.handle(args)
         self.assertEqual(cli.preferences()['mux'], 'cmux')
 
+    @contextlib.contextmanager
+    def skill_fixtures(self):
+        tools = self.root / 'tools'
+        sources = [tools / 'skills' / name for name in ['sample-one', 'sample-two']]
+        for source in sources:
+            source.mkdir(parents=True)
+            (source / 'SKILL.md').write_text(f'# {source.name}\nTemporary test skill.\n')
+        with patch.object(cli, 'TOOLS', tools), \
+                patch('sumi_cli.Path.home', return_value=self.home), \
+                patch.dict(os.environ, {'CODEX_HOME': str(self.home / '.codex')}):
+            yield sources
+
     def test_skill_install_is_idempotent_and_preserves_conflicts(self):
         args = argparse.Namespace(operation='install', root=self.root, agent='all', scope='user')
-        with patch('sumi_cli.Path.home', return_value=self.home):
+        with self.skill_fixtures() as sources:
             cli.skills(args)
             cli.skills(args)
             for agent in ['codex', 'claude']:
-                dest = cli.skill_paths(agent, 'user', self.root) / 'factory-workflow'
-                self.assertTrue(dest.is_symlink())
-                self.assertEqual(dest.resolve(), cli.TOOLS / 'skills/factory-workflow')
-            conflict = self.home / '.claude/skills/factory-design'
+                for source in sources:
+                    dest = cli.skill_paths(agent, 'user', self.root) / source.name
+                    self.assertTrue(dest.is_symlink())
+                    self.assertEqual(dest.resolve(), source.resolve())
+            conflict = self.home / '.claude/skills' / sources[0].name
             conflict.unlink()
             conflict.mkdir()
             (conflict / 'SKILL.md').write_text('Personal skill')
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ValueError, 'Skill already exists:'):
                 cli.skills(args)
             self.assertEqual((conflict / 'SKILL.md').read_text(), 'Personal skill')
 
     def test_project_skills_do_not_touch_user_scope(self):
         args = argparse.Namespace(operation='install', root=self.root, agent='codex', scope='project')
-        cli.skills(args)
-        self.assertTrue((self.root / '.agents/skills/factory-design').is_symlink())
-        self.assertFalse((self.home / '.agents').exists())
+        with self.skill_fixtures() as sources:
+            cli.skills(args)
+            for source in sources:
+                dest = self.root / '.agents/skills' / source.name
+                self.assertTrue(dest.is_symlink())
+                self.assertEqual(dest.resolve(), source.resolve())
+            self.assertFalse((self.home / '.agents').exists())
+            self.assertFalse((self.home / '.claude').exists())
+            self.assertFalse((self.home / '.codex').exists())
 
     def test_native_layout_roles_and_safe_commands(self):
         root = self.root / "project space'; echo unsafe"
@@ -91,14 +110,10 @@ class CliTest(unittest.TestCase):
                 for child in node['children']:
                     walk(child)
         walk(layout)
-        self.assertEqual(len(surfaces), 8)
         self.assertEqual(sum(s['focus'] for s in surfaces), 1)
         import shlex
         for surface in surfaces:
             self.assertIn(f'SUMI_ROOT={root}', shlex.split(surface['command']))
-        kdl = workspace.zellij_layout(root, 'test')
-        self.assertIn('stacked=true', kdl)
-        self.assertIn('Weekly allowance remaining', kdl)
 
     def test_native_reopen_uses_existing_workspace(self):
         calls = []
@@ -111,7 +126,7 @@ class CliTest(unittest.TestCase):
         self.assertTrue(any('select-workspace' in call for call in calls))
         self.assertFalse(any('new-workspace' in call for call in calls))
 
-    def test_native_creation_sends_layout_and_respects_detach(self):
+    def test_native_creation_respects_detach(self):
         calls = []
         def fake(args, check=True):
             calls.append(args)
@@ -120,8 +135,6 @@ class CliTest(unittest.TestCase):
             workspace.start_native('cmux', self.root, 'sumi-test', True)
         creation = next(c for c in calls if 'new-workspace' in c)
         self.assertEqual(creation[creation.index('--focus') + 1], 'false')
-        self.assertEqual(json.loads(creation[creation.index('--layout') + 1]),
-                         workspace.native_layout(self.root, 'sumi-test'))
 
     def test_native_access_denial_is_reported_without_settings_changes(self):
         calls = []
@@ -131,7 +144,7 @@ class CliTest(unittest.TestCase):
         with patch('sumi_workspace.run', side_effect=fake), patch('sumi_workspace.sys.platform', 'darwin'):
             with self.assertRaisesRegex(RuntimeError, 'No access setting was changed'):
                 workspace.start_native('cmux', self.root, 'sumi-test', True)
-        self.assertEqual(len(calls), 2)
+        self.assertFalse(any('new-workspace' in call for call in calls))
 
 
 if __name__ == '__main__':

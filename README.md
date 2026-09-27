@@ -330,3 +330,41 @@ repository must authorize the peers/seed nodes receiving its contents.
 Read https://radicle.dev/guides/user before enabling network synchronization.
 First prove the local review loop, then add a second isolated peer, then a LAN
 peer, and finally choose a WAN transport.
+
+### Local scheduled commands
+
+Run recurring noninteractive commands independently of your mux or agent:
+
+```sh
+sumi schedule add hello --every 10s -- python3 -c 'print("hello from Sumi")'
+sumi schedule serve
+# In another terminal:
+sumi schedule list
+sumi schedule pause hello
+sumi schedule run hello
+sumi schedule runs hello
+sumi schedule resume hello
+sumi schedule remove hello
+```
+
+Use `sumi --root /path/to/project schedule ...` outside the project. Commands run
+at the project root with stdin closed and their arguments passed literally, without
+a shell. Use noninteractive modes when scheduling agent CLIs. Definitions live in
+`.sumi/schedules.json`; ignored runtime records and stdout/stderr logs live in
+`.sumi/schedule-runs/`. `list`, `runs`, and manual execution print JSON with state
+and log paths. A manual failure exits nonzero.
+
+Intervals accept positive integers suffixed by `s`, `m`, `h`, or `d`, up to ten
+years. First execution is one interval after adding; subsequent executions are one
+interval after completion. Restart catches up once per overdue schedule. Resume
+starts a fresh interval; manual execution resets the interval without unpausing.
+Only one command runs per project, including manual runs. Pausing does not stop an
+active command; removing an active or unreconciled schedule is rejected.
+
+`serve` stays in the foreground: no background service is installed. Ctrl+C stops
+its active process group and records interruption. Commands must not daemonize or
+escape their process group; leftover descendants are terminated on completion.
+After a crash, surviving or uncertain launches block further execution with a
+recovery message rather than risking duplicate work. Preserve the run record and
+inspect the command before intervening. A successful exit describes the command,
+not stakeholder acceptance of its changes.
