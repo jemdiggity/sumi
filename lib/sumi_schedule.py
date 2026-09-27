@@ -247,6 +247,15 @@ class Scheduler:
                 os.killpg(proc.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+        # Delivery of SIGKILL is not proof that every descendant has exited.
+        # Keep the durable run active if ownership cannot safely be released.
+        deadline = time.monotonic() + 2
+        while group_alive(proc.pid) and time.monotonic() < deadline:
+            proc.poll()
+            time.sleep(.05)
+        if group_alive(proc.pid):
+            raise RuntimeError(f'Process group {proc.pid} survived cleanup; run requires recovery. '
+                               'Inspect the run logs and stop surviving processes before retrying.')
         proc.wait()
 
     def serve(self):

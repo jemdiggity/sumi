@@ -85,7 +85,10 @@ class ScheduleTest(unittest.TestCase):
         self.assertEqual(self.s.run()['schedule_id'], 'a')
         self.s.edit('remove', 'a')
         self.add('a')
-        self.assertIsNone(self.s.latest(self.s.load()[-1], self.s.records()))
+        self.s.edit('pause', 'b')
+        self.assertIsNone(self.s.run())
+        self.now += 10
+        self.assertEqual(self.s.run()['schedule_id'], 'a')
 
     def test_pause_resume_and_manual_run_use_completion_anchor(self):
         self.add()
@@ -120,17 +123,6 @@ class ScheduleTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 interval(value)
 
-    def test_project_lock_excludes_manual_and_second_server(self):
-        self.add()
-        with lock(self.s.runtime / 'execution.lock'):
-            result = self.cli('run', 'sample')
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn('busy', result.stderr)
-        with lock(self.s.runtime / 'serve.lock'):
-            result = self.cli('serve')
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn('busy', result.stderr)
-
     def test_serve_observes_edits_and_interrupts_command(self):
         self.add('long', [sys.executable, '-c', 'import time; time.sleep(60)'])
         self.s.edit('pause', 'long')
@@ -142,6 +134,7 @@ class ScheduleTest(unittest.TestCase):
             values[0]['enabled'] = True
             atomic_json(self.s.definitions, values)
         self.wait_for(lambda: any(r['state'] == 'running' for r in self.s.records()))
+        self.assertNotEqual(self.cli('serve').returncode, 0)
         self.assertNotEqual(self.cli('remove', 'long').returncode, 0)
         self.assertNotEqual(self.cli('run', 'long').returncode, 0)
         server.send_signal(signal.SIGINT)
@@ -176,6 +169,33 @@ class ScheduleTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'ownership is uncertain'):
             self.s.run('sample')
         self.assertEqual(len(self.s.records()), 1)
+
+    def test_schedule_named_add_does_not_swallow_trailing_arguments(self):
+        self.add('add')
+        for action in ('run', 'remove'):
+            result = self.cli(action, 'add', '--', 'unexpected')
+            self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(self.s.records(), [])
+        self.assertEqual(len(self.s.load()), 1)
+
+    def test_surviving_descendant_keeps_run_reserved(self):
+        from itertools import count
+        from unittest.mock import Mock, patch
+        self.add()
+        process = Mock(pid=456789, returncode=0)
+        process.wait.return_value = 0
+        process.poll.return_value = 0
+        with patch('sumi_schedule.subprocess.Popen', return_value=process), \
+                patch('sumi_schedule.group_alive', return_value=True), \
+                patch('sumi_schedule.os.killpg') as kill, \
+                patch('sumi_schedule.time.monotonic', side_effect=count(0, 3)):
+            with self.assertRaisesRegex(RuntimeError, 'survived cleanup'):
+                self.s.run('sample')
+            self.assertEqual(self.s.records()[0]['state'], 'running')
+            with self.assertRaisesRegex(RuntimeError, 'needs recovery'):
+                self.s.run('sample')
+            self.assertEqual([call.args[1] for call in kill.call_args_list],
+                             [signal.SIGTERM, signal.SIGKILL])
 
 
 if __name__ == '__main__':

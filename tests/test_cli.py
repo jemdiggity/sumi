@@ -110,14 +110,10 @@ class CliTest(unittest.TestCase):
                 for child in node['children']:
                     walk(child)
         walk(layout)
-        self.assertEqual(len(surfaces), 8)
         self.assertEqual(sum(s['focus'] for s in surfaces), 1)
         import shlex
         for surface in surfaces:
             self.assertIn(f'SUMI_ROOT={root}', shlex.split(surface['command']))
-        kdl = workspace.zellij_layout(root, 'test')
-        self.assertIn('stacked=true', kdl)
-        self.assertIn('Weekly allowance remaining', kdl)
 
     def test_native_reopen_uses_existing_workspace(self):
         calls = []
@@ -130,7 +126,7 @@ class CliTest(unittest.TestCase):
         self.assertTrue(any('select-workspace' in call for call in calls))
         self.assertFalse(any('new-workspace' in call for call in calls))
 
-    def test_native_creation_sends_layout_and_respects_detach(self):
+    def test_native_creation_respects_detach(self):
         calls = []
         def fake(args, check=True):
             calls.append(args)
@@ -139,8 +135,6 @@ class CliTest(unittest.TestCase):
             workspace.start_native('cmux', self.root, 'sumi-test', True)
         creation = next(c for c in calls if 'new-workspace' in c)
         self.assertEqual(creation[creation.index('--focus') + 1], 'false')
-        self.assertEqual(json.loads(creation[creation.index('--layout') + 1]),
-                         workspace.native_layout(self.root, 'sumi-test'))
 
     def test_native_access_denial_is_reported_without_settings_changes(self):
         calls = []
@@ -150,7 +144,7 @@ class CliTest(unittest.TestCase):
         with patch('sumi_workspace.run', side_effect=fake), patch('sumi_workspace.sys.platform', 'darwin'):
             with self.assertRaisesRegex(RuntimeError, 'No access setting was changed'):
                 workspace.start_native('cmux', self.root, 'sumi-test', True)
-        self.assertEqual(len(calls), 2)
+        self.assertFalse(any('new-workspace' in call for call in calls))
 
 
 if __name__ == '__main__':

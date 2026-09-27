@@ -655,5 +655,20 @@
     "evidence": [
       "Draft specification: .sumi/docs/specs/LF-38/README.md; awaiting design feedback, implementation not started."
     ]
+  },
+  {
+    "id": "LF-39",
+    "title": "Make skill installation tests independent of bundled skill names",
+    "status": "done",
+    "depends_on": [],
+    "skills": [
+      "sumi-sw-factory-refactor"
+    ],
+    "acceptance": [
+      "Skill installation tests use isolated fixtures while retaining collision, idempotency, and scope coverage."
+    ],
+    "evidence": [
+      "Maintenance agent implemented and verified in a separate worktree; cherry-picked as 384b2ae. Intent: .sumi/docs/maintenance/LF-39.md."
+    ]
   }
 ]

@@ -376,8 +376,10 @@ def main():
         split = argv.index('--')
         head = argv[:split]
         if 'schedule' in head and 'add' in head:
-            schedule_command = argv[split + 1:]
-            argv = head
+            candidate = parser.parse_args(head)
+            if candidate.action == 'schedule' and candidate.schedule_action == 'add':
+                schedule_command = argv[split + 1:]
+                argv = head
     args = parser.parse_args(argv)
     if args.action == 'schedule':
         args.schedule_command = schedule_command

@@ -31,3 +31,18 @@ and 130 for interruption. Logs preserve the actual child exit code separately.
 Scope: no service installer, agent policy, mux pane changes, worktree creation,
 calendar syntax, or automatic task acceptance. Those remain responsibilities of
 future scheduling slices or of the command being scheduled.
+
+## Validation and review
+
+The real ten-second foreground smoke run printed `hello from scheduled Sumi` and
+saved a successful run and stdout log. The initial Astra review found two defects:
+process-group cleanup needed an explicit post-SIGKILL exit check, and CLI `--`
+extraction confused an ID named `add` with the add subcommand. Both are fixed and
+have regression coverage. Uncertain cleanup keeps the run reserved for recovery.
+
+At Jeremy's request, removed a duplicate lock test in favor of exercising two real
+scheduler processes, removed the missing-file test that only exercised the file
+API, and removed assertions tied to pane counts, labels, exact refresh intervals,
+and comparing a generated layout to the same generating function. Behavioral
+checks for output, isolation, restart, failure, argument handling, and process
+ownership remain.
