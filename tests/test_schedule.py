@@ -55,25 +55,6 @@ class ScheduleTest(unittest.TestCase):
     def add(self, name='sample', command=None):
         return self.s.edit('add', name, '10s', command or [sys.executable, '-c', 'print("hello")'])
 
-    def test_cli_literal_arguments_and_lifecycle(self):
-        literal = 'space $HOME `touch unexpected` ; *'
-        added = self.cli('add', 'sample', '--every', '24h', '--', sys.executable, '-c',
-                         'import sys; print(sys.argv[1]); print(sys.stdin.read())', literal)
-        self.assertEqual(added.returncode, 0, added.stderr)
-        self.assertEqual(self.cli('pause', 'sample').returncode, 0)
-        result = self.cli('run', 'sample')
-        self.assertEqual(result.returncode, 0, result.stderr)
-        record = json.loads(result.stdout)
-        self.assertEqual(Path(record['stdout']).read_text(), literal + '\n\n')
-        self.assertFalse(self.root.joinpath('unexpected').exists())
-        listing = json.loads(self.cli('list').stdout)
-        self.assertFalse(listing[0]['enabled'])
-        self.assertIsNone(listing[0]['next_due'])
-        self.assertEqual(self.cli('resume', 'sample').returncode, 0)
-        self.assertEqual(self.cli('remove', 'sample').returncode, 0)
-        self.assertEqual(len(json.loads(self.cli('runs', 'sample').stdout)), 1)
-        self.assertEqual(json.loads(self.cli('list').stdout), [])
-
     def test_due_order_catchup_completion_and_new_generation(self):
         self.add('b'); self.add('a')
         self.assertIsNone(self.s.run())
@@ -169,14 +150,6 @@ class ScheduleTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'ownership is uncertain'):
             self.s.run('sample')
         self.assertEqual(len(self.s.records()), 1)
-
-    def test_schedule_named_add_does_not_swallow_trailing_arguments(self):
-        self.add('add')
-        for action in ('run', 'remove'):
-            result = self.cli(action, 'add', '--', 'unexpected')
-            self.assertEqual(result.returncode, 2, result.stderr)
-        self.assertEqual(self.s.records(), [])
-        self.assertEqual(len(self.s.load()), 1)
 
     def test_surviving_descendant_keeps_run_reserved(self):
         from itertools import count

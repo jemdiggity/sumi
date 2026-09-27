@@ -1,7 +1,7 @@
 # LF-40: Python prototyping and a standalone native Sumi
 
-Status: draft. Jeremy selected Rust unless a concrete application need favors Go;
-no such need has been identified. Rollout scope remains proposed.
+Status: approved for implementation by Jeremy. Rust scheduling preview;
+macOS arm64 and Linux x86_64 are the validation targets.
 
 ## Outcome
 

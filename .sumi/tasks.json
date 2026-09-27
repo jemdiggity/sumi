@@ -678,7 +678,7 @@
   {
     "id": "LF-40",
     "title": "Keep Python prototyping and ship a standalone native Sumi",
-    "status": "proposed",
+    "status": "active",
     "depends_on": [
       "LF-38"
     ],

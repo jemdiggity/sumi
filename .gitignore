@@ -2,3 +2,5 @@
 __pycache__/
 .sumi/worktrees/
 .sumi/schedule-runs/
+native/target/
+dist/

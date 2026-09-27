@@ -1,0 +1,44 @@
+{
+  "machine": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "python": "3.14.4",
+  "rust": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+  "build": "cargo --release, LTO, stripped",
+  "repetitions": 30,
+  "method": "2 warmups then 30 sequential subprocess runs; warm filesystem cache; median and nearest-rank p95 wall time in ms. Idle RSS/%CPU: ten ps samples 200ms apart after 1s settle. %CPU is the OS ps lifetime estimate, not instantaneous.",
+  "binary_bytes": 918128,
+  "engines": {
+    "python": {
+      "help": {
+        "median_ms": 61.408,
+        "p95_ms": 68.314
+      },
+      "empty_list": {
+        "median_ms": 60.329,
+        "p95_ms": 65.321
+      },
+      "list_1000_records": {
+        "median_ms": 102.605,
+        "p95_ms": 108.976
+      },
+      "idle_median_rss_kib": 24464.0,
+      "idle_median_cpu_percent": 0.1
+    },
+    "rust": {
+      "help": {
+        "median_ms": 4.2,
+        "p95_ms": 4.639
+      },
+      "empty_list": {
+        "median_ms": 4.709,
+        "p95_ms": 5.644
+      },
+      "list_1000_records": {
+        "median_ms": 28.082,
+        "p95_ms": 29.861
+      },
+      "idle_median_rss_kib": 2720.0,
+      "idle_median_cpu_percent": 0.0
+    }
+  }
+}
