@@ -1,0 +1,8 @@
+{
+  "ci_run": "https://github.com/jemdiggity/sumi/actions/runs/36298722828",
+  "macos_arm64": "passed build, lint, 38 tests, dependency inspection, artifact upload",
+  "linux_x86_64": "passed build, lint, 38 tests, dependency inspection, artifact upload",
+  "downloaded_macos_sha256": "8d4e94205c84d6794188d69d2914ef32c7d8fb683bc5cf8b4cdf70813e45b6e5",
+  "downloaded_standalone_output": "downloaded binary works\n",
+  "environment": "Temporary project outside checkout; PATH=/no-tools-here; explicit /bin/echo command; no Python/Cargo/Git invoked"
+}

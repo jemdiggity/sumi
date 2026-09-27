@@ -674,5 +674,29 @@
     "evidence": [
       "Maintenance agent implemented and verified in a separate worktree; cherry-picked as 384b2ae. Intent: .sumi/docs/maintenance/LF-39.md."
     ]
+  },
+  {
+    "id": "LF-40",
+    "title": "Keep Python prototyping and ship a standalone native Sumi",
+    "status": "done",
+    "depends_on": [
+      "LF-38"
+    ],
+    "skills": [
+      "sumi",
+      "sumi-sw-factory"
+    ],
+    "acceptance": [
+      "Agree on one native language, rollout scope, and Python-to-native promotion model.",
+      "Native scheduling preview runs without Python and interoperates safely with existing state and locks.",
+      "Measure portability and performance against the Python implementation."
+    ],
+    "evidence": [
+      "Rust scheduling preview implemented under native/ with shared Python-compatible JSON state, locks, crash recovery, and no Python fallback.",
+      "38 tests pass locally and on macOS arm64/Linux x86_64 CI. Clippy and formatting pass. CI and downloaded-binary verification: .sumi/docs/impl/LF-40/ci-verification.json.",
+      "Fresh-context Astra review passed: .sumi/docs/review/LF-40/round-1.md.",
+      "Local benchmark: median empty list 60.3ms Python vs 4.7ms Rust; methodology and limits in .sumi/docs/impl/LF-40/benchmark-macos-arm64.json.",
+      "PR ready for review, not merged: https://github.com/jemdiggity/sumi/pull/2"
+    ]
   }
 ]

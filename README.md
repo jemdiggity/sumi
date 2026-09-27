@@ -368,3 +368,11 @@ After a crash, surviving or uncertain launches block further execution with a
 recovery message rather than risking duplicate work. Preserve the run record and
 inspect the command before intervening. A successful exit describes the command,
 not stakeholder acceptance of its changes.
+
+### Native Rust preview
+
+Sumi now has an optional standalone Rust implementation of scheduling. Python
+remains the prototyping implementation and the default CLI during this preview.
+Build with `native/build.sh`; run `dist/<target>/sumi` explicitly. Both versions
+share schedule state and locks. See [native/README.md](native/README.md) for
+installation, supported platforms, shared acceptance checks, and limitations.
