@@ -674,5 +674,25 @@
     "evidence": [
       "Maintenance agent implemented and verified in a separate worktree; cherry-picked as 384b2ae. Intent: .sumi/docs/maintenance/LF-39.md."
     ]
+  },
+  {
+    "id": "LF-40",
+    "title": "Keep Python prototyping and ship a standalone native Sumi",
+    "status": "proposed",
+    "depends_on": [
+      "LF-38"
+    ],
+    "skills": [
+      "sumi",
+      "sumi-sw-factory"
+    ],
+    "acceptance": [
+      "Agree on one native language, rollout scope, and Python-to-native promotion model.",
+      "Native scheduling preview runs without Python and interoperates safely with existing state and locks.",
+      "Measure portability and performance against the Python implementation."
+    ],
+    "evidence": [
+      "Draft specification: .sumi/docs/specs/LF-40/README.md. Implementation not started."
+    ]
   }
 ]
