@@ -41,3 +41,10 @@ method, versions, median/p95 startup/list latencies, idle CPU/RSS and binary siz
 These are warm-cache local measurements; startup excludes model/network time and
 is not evidence that agents answer faster. Release budgets should be decided before
 a future default-runtime switch, not retrofitted to this initial measurement.
+
+Validation completed: CI run 36298722828 passed on both target platforms (38 tests
+each, formatting, Clippy, and dependency inspection). The downloaded macOS CI
+artifact also ran successfully outside the checkout with Python/Cargo/Git absent
+from PATH. `ci-verification.json` records the artifact hash and observed output.
+Learning and maintenance records were checked; both are recent, so the factory
+did not start redundant follow-up sessions. PR: https://github.com/jemdiggity/sumi/pull/2.
