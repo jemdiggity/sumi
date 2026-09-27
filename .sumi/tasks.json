@@ -636,5 +636,43 @@
       "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md.",
       "Native cmux verified live after user-approved local automation mode. Two launches reused one workspace with six panes/eight surfaces; Tasks and Agent sessions rendered correctly. Config backed up and validated. Actual Sumi native workspace opened; default remains Zellij. See docs/CLI-LAUNCHER.md."
     ]
+  },
+  {
+    "id": "LF-38",
+    "title": "Schedule local Sumi tasks",
+    "status": "done",
+    "depends_on": [],
+    "source": "Jeremy: try the new Sumi skills with a simple CLI scheduling spec",
+    "skills": [
+      "sumi",
+      "sumi-sw-factory"
+    ],
+    "acceptance": [
+      "Local, mux-independent recurring commands with durable run logs.",
+      "Pause, resume, manual execution, and restart recovery without overlapping project runs.",
+      "Implement and review the agreed spec through the Sumi factory workflow."
+    ],
+    "evidence": [
+      "Implemented recurring local commands with durable logs, project-wide execution locking, lifecycle controls, and conservative crash recovery.",
+      "35 tests pass; real ten-second foreground execution saved expected output.",
+      "Fresh-context Astra review passed in round 2 after two defects were fixed. Reports: .sumi/docs/review/LF-38/.",
+      "Pull request ready for human review, not merged: https://github.com/jemdiggity/sumi/pull/1",
+      "Factory follow-ups: learning session found no prior PR feedback; LF-39 isolated skill installation fixtures in a separate worktree."
+    ]
+  },
+  {
+    "id": "LF-39",
+    "title": "Make skill installation tests independent of bundled skill names",
+    "status": "done",
+    "depends_on": [],
+    "skills": [
+      "sumi-sw-factory-refactor"
+    ],
+    "acceptance": [
+      "Skill installation tests use isolated fixtures while retaining collision, idempotency, and scope coverage."
+    ],
+    "evidence": [
+      "Maintenance agent implemented and verified in a separate worktree; cherry-picked as 384b2ae. Intent: .sumi/docs/maintenance/LF-39.md."
+    ]
   }
 ]
