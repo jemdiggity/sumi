@@ -369,7 +369,18 @@ def main():
     p.add_argument('task_id')
     p.add_argument('--status', choices=['ready', 'blocked', 'done'], required=True)
     p.add_argument('--evidence', required=True)
-    args = parser.parse_args()
+    argv = sys.argv[1:]
+    schedule_command = None
+    # The command after -- belongs to the scheduled executable, not Sumi.
+    if '--' in argv:
+        split = argv.index('--')
+        head = argv[:split]
+        if 'schedule' in head and 'add' in head:
+            schedule_command = argv[split + 1:]
+            argv = head
+    args = parser.parse_args(argv)
+    if args.action == 'schedule':
+        args.schedule_command = schedule_command
     try:
         if handle(args):
             return

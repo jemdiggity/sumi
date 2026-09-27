@@ -49,6 +49,8 @@ def session_name(root, mux):
 
 
 def add_commands(sub):
+    from sumi_schedule import add_commands as add_schedule_commands
+    add_schedule_commands(sub)
     sub.add_parser('open', help='Open or reattach to the project workspace (default command)')
     p = sub.add_parser('config', help='Show preferences or save a default mux in ~/.sumi')
     p.add_argument('--mux', choices=MUXES, dest='preferred_mux')
@@ -122,7 +124,10 @@ def skills(args):
 
 def handle(args):
     from sumi_runner import atomic_json, lease
-    if args.action == 'skills':
+    if args.action == 'schedule':
+        from sumi_schedule import handle as handle_schedule
+        handle_schedule(args)
+    elif args.action == 'skills':
         skills(args)
     elif args.action == 'install':
         dest = args.bin_dir.expanduser() / 'sumi'

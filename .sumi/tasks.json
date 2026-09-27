@@ -636,5 +636,24 @@
       "CLI, saved preferences, all four layout adapters, and Codex/Claude skill installer implemented. 27 tests pass; real Zellij/tmux/cmux CLI launches and idempotent reopen verified. Native cmux live layout verification awaits local automation approval or a launch from inside cmux; external socket access is denied and desktop control failed to start. See docs/CLI-LAUNCHER.md.",
       "Native cmux verified live after user-approved local automation mode. Two launches reused one workspace with six panes/eight surfaces; Tasks and Agent sessions rendered correctly. Config backed up and validated. Actual Sumi native workspace opened; default remains Zellij. See docs/CLI-LAUNCHER.md."
     ]
+  },
+  {
+    "id": "LF-38",
+    "title": "Schedule local Sumi tasks",
+    "status": "active",
+    "depends_on": [],
+    "source": "Jeremy: try the new Sumi skills with a simple CLI scheduling spec",
+    "skills": [
+      "sumi",
+      "sumi-sw-factory"
+    ],
+    "acceptance": [
+      "Local, mux-independent recurring commands with durable run logs.",
+      "Pause, resume, manual execution, and restart recovery without overlapping project runs.",
+      "Implement and review the agreed spec through the Sumi factory workflow."
+    ],
+    "evidence": [
+      "Draft specification: .sumi/docs/specs/LF-38/README.md; awaiting design feedback, implementation not started."
+    ]
   }
 ]
