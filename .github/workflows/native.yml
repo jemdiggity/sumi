@@ -19,6 +19,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install Rust toolchain
         run: rustup toolchain install 1.93.1 --profile minimal --component rustfmt --component clippy && rustup default 1.93.1
       - name: Build and lint
