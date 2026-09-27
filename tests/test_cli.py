@@ -57,28 +57,47 @@ class CliTest(unittest.TestCase):
                 cli.handle(args)
         self.assertEqual(cli.preferences()['mux'], 'cmux')
 
+    @contextlib.contextmanager
+    def skill_fixtures(self):
+        tools = self.root / 'tools'
+        sources = [tools / 'skills' / name for name in ['sample-one', 'sample-two']]
+        for source in sources:
+            source.mkdir(parents=True)
+            (source / 'SKILL.md').write_text(f'# {source.name}\nTemporary test skill.\n')
+        with patch.object(cli, 'TOOLS', tools), \
+                patch('sumi_cli.Path.home', return_value=self.home), \
+                patch.dict(os.environ, {'CODEX_HOME': str(self.home / '.codex')}):
+            yield sources
+
     def test_skill_install_is_idempotent_and_preserves_conflicts(self):
         args = argparse.Namespace(operation='install', root=self.root, agent='all', scope='user')
-        with patch('sumi_cli.Path.home', return_value=self.home):
+        with self.skill_fixtures() as sources:
             cli.skills(args)
             cli.skills(args)
             for agent in ['codex', 'claude']:
-                dest = cli.skill_paths(agent, 'user', self.root) / 'factory-workflow'
-                self.assertTrue(dest.is_symlink())
-                self.assertEqual(dest.resolve(), cli.TOOLS / 'skills/factory-workflow')
-            conflict = self.home / '.claude/skills/factory-design'
+                for source in sources:
+                    dest = cli.skill_paths(agent, 'user', self.root) / source.name
+                    self.assertTrue(dest.is_symlink())
+                    self.assertEqual(dest.resolve(), source.resolve())
+            conflict = self.home / '.claude/skills' / sources[0].name
             conflict.unlink()
             conflict.mkdir()
             (conflict / 'SKILL.md').write_text('Personal skill')
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ValueError, 'Skill already exists:'):
                 cli.skills(args)
             self.assertEqual((conflict / 'SKILL.md').read_text(), 'Personal skill')
 
     def test_project_skills_do_not_touch_user_scope(self):
         args = argparse.Namespace(operation='install', root=self.root, agent='codex', scope='project')
-        cli.skills(args)
-        self.assertTrue((self.root / '.agents/skills/factory-design').is_symlink())
-        self.assertFalse((self.home / '.agents').exists())
+        with self.skill_fixtures() as sources:
+            cli.skills(args)
+            for source in sources:
+                dest = self.root / '.agents/skills' / source.name
+                self.assertTrue(dest.is_symlink())
+                self.assertEqual(dest.resolve(), source.resolve())
+            self.assertFalse((self.home / '.agents').exists())
+            self.assertFalse((self.home / '.claude').exists())
+            self.assertFalse((self.home / '.codex').exists())
 
     def test_native_layout_roles_and_safe_commands(self):
         root = self.root / "project space'; echo unsafe"
