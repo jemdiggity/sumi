@@ -640,7 +640,7 @@
   {
     "id": "LF-38",
     "title": "Schedule local Sumi tasks",
-    "status": "active",
+    "status": "done",
     "depends_on": [],
     "source": "Jeremy: try the new Sumi skills with a simple CLI scheduling spec",
     "skills": [
@@ -653,7 +653,11 @@
       "Implement and review the agreed spec through the Sumi factory workflow."
     ],
     "evidence": [
-      "Draft specification: .sumi/docs/specs/LF-38/README.md; awaiting design feedback, implementation not started."
+      "Implemented recurring local commands with durable logs, project-wide execution locking, lifecycle controls, and conservative crash recovery.",
+      "35 tests pass; real ten-second foreground execution saved expected output.",
+      "Fresh-context Astra review passed in round 2 after two defects were fixed. Reports: .sumi/docs/review/LF-38/.",
+      "Pull request ready for human review, not merged: https://github.com/jemdiggity/sumi/pull/1",
+      "Factory follow-ups: learning session found no prior PR feedback; LF-39 isolated skill installation fixtures in a separate worktree."
     ]
   },
   {
